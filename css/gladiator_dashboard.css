@@ -154,9 +154,9 @@
     content: '';
     position: absolute;
     top: -1px;
-    right: 8px;
+    right: 0;
     bottom: -1px;
-    left: 8px;
+    left: 0;
     border-left: 2px solid #ff9900;
     border-right: 2px solid #ff9900;
     pointer-events: none;
@@ -165,14 +165,10 @@
 
 .gladiator_dashboard_admin_dash .list_order_table_body_tr.order-group-start::after {
     border-top: 2px solid #ff9900;
-    border-top-left-radius: 14px;
-    border-top-right-radius: 14px;
 }
 
 .gladiator_dashboard_admin_dash .list_order_table_body_tr.order-group-end::after {
     border-bottom: 2px solid #ff9900;
-    border-bottom-left-radius: 14px;
-    border-bottom-right-radius: 14px;
 }
 
 .product_params {
