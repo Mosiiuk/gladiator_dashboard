@@ -1,0 +1,3470 @@
+<?php
+require_once('telegram_bot.php');
+require_once('chats.php');
+require_once('notifications.php');
+
+class Gladiator_Dashboard_Core {
+    private $ajax_action_list=[];
+    private $setting_prefix='GDP_';
+    public $order_options=[];
+    public $Boosters_Applicant_Instance;
+    public $Boosters_Withdrawal_Instance;
+    public $booster_orders_Instance;
+    public $Booster_Instance;
+    public $booster_subscribe_category_Instance;
+    public $customer_panel_Instance;
+    public $Chat_Booster_Customer_Instance;
+    public $Notifications_Instance;
+
+    public function __construct() {
+        $this->order_options=[
+            'boosters_products_prices'=>$this->setting_prefix.'boosters_products_prices', // List products price
+        ];
+
+        $this->Boosters_Applicant_Instance = new Boosters_Applicant($this->setting_prefix,$this->order_options);
+        $this->Booster_Instance = new Booster();
+        $this->Boosters_Withdrawal_Instance = new boosters_withdrawal();
+
+        $this->booster_orders_Instance = new booster_orders($this->order_options,$this->Boosters_Applicant_Instance);
+        $this->booster_subscribe_category_Instance = new booster_subscribe_category();
+
+        $this->customer_panel_Instance = new customer_panel();
+        $this->Chat_Booster_Customer_Instance = new Chat_Booster_Customer();
+        $this->Notifications_Instance = new gladiator_dashboard_notification();
+
+        add_action('woocommerce_new_order',  [$this,'woocommerce_new_order']);
+        add_action('woocommerce_order_status_processing',  [$this,'woocommerce_order_status_completed']);
+
+        add_action('init',  [$this,'test_init']);
+
+
+        add_action( 'personal_options_update', [$this,'save_custom_user_profile_fields'] );
+        add_action( 'edit_user_profile_update', [$this,'save_custom_user_profile_fields'] );
+
+        $this->ajax_action_list=[
+            'gladiator_dashboard_get_order_list',
+            'gladiator_dashboard_set_order_price',
+            'gladiator_dashboard_clear_order_price',
+            'gladiator_dashboard_boosters_list',
+            'gladiator_dashboard_get_order_list_choice_app',
+            'gladiator_dashboard_admin_order_completion_app',
+            'gladiator_dashboard_get_withdrawal_app',
+            'gladiator_dashboard_set_order_to_booster',
+            'gladiator_dashboard_admin_confirm_order_completed',
+            'gladiator_dashboard_admin_confirm_paid',
+            'gladiator_dashboard_admin_delete_withdrawal',
+
+            'gladiator_dashboard_booster_order_list',
+            'gladiator_dashboard_booster_order_filter',
+            'gladiator_dashboard_booster_want_order', // Create Applicant
+            'gladiator_dashboard_booster_my_order_list', // Booster order list in work
+            'gladiator_dashboard_booster_set_order_completed', // Booster set order status completed
+            'gladiator_dashboard_booster_order_screen_shot',
+            'gladiator_dashboard_booster_cancel_want_order', // Cancel booster Applicant
+            'gladiator_dashboard_booster_change_avatar',
+            'gladiator_dashboard_booster_save_payment_method',
+            'gladiator_dashboard_booster_withdrawal_list',
+            'gladiator_dashboard_booster_create_withdraw',
+            'gladiator_dashboard_booster_withdrawal_delete',
+            'gladiator_dashboard_booster_save_subscribe_order',
+
+            'gladiator_dashboard_booster_chat_list',
+            'gladiator_dashboard_booster_chat_load_message',
+            'gladiator_dashboard_booster_chat_send_message',
+            'gladiator_dashboard_booster_chat_delete_message',
+            'gladiator_dashboard_booster_chat_edit_message',
+
+            'gladiator_dashboard_customer_order_list',
+            'gladiator_dashboard_customer_save_profile',
+            'gladiator_dashboard_customer_chat_list',
+            'gladiator_dashboard_customer_chat_load_message',
+            'gladiator_dashboard_customer_chat_send_message',
+            'gladiator_dashboard_customer_chat_delete_message',
+            'gladiator_dashboard_customer_chat_edit_message',
+
+            'gladiator_dashboard_chat_set_message_status',
+            'gladiator_dashboard_chat_user_activity',
+            'gladiator_dashboard_get_chat_user_activity',
+
+            'gladiator_dashboard_get_notification',
+            'gladiator_dashboard_delete_notify',
+            'gladiator_dashboard_delete_notify_all',
+            'gladiator_dashboard_read_notify_all',
+            'gladiator_dashboard_admin_get_notification',
+
+            'gladiator_dashboard_admin_chat_list',
+            'gladiator_dashboard_admin_chat_load_message',
+            'gladiator_dashboard_admin_chat_send_message',
+            'gladiator_dashboard_admin_chat_edit_message',
+            'gladiator_dashboard_admin_chat_delete_message',
+            'gladiator_dashboard_admin_delete_chat',
+            'gladiator_dashboard_admin_get_users_list',
+            'gladiator_dashboard_admin_add_user_to_chat',
+            'gladiator_dashboard_admin_remove_user_from_chat',
+
+            'gladiator_redirect_to_chat',
+        ];
+        $this->register_ajax_action();
+    }
+
+
+    public function save_custom_user_profile_fields($user_id)
+    {
+        if (isset($_POST['acf']['field_booster_balance']))
+        {
+            $balance = (float)$_POST['acf']['field_booster_balance'];
+            if ($balance<0) $balance=0;
+            update_field('booster_balance', $balance, 'user_' . $user_id);
+        }
+    }
+
+    public function test_init()
+    {
+        if (isset($_GET['gl_test']) && $_GET['gl_test']==12)
+        {
+            /* $s=$this->Boosters_Applicant_Instance->get_applicants_work_status_by_order_id(69449);
+             var_dump($s);*/
+            /*$r = $this->Notifications_Instance->create("TEST New order is available. <a href='https://gladiatorboost.com/booster_find_orders/' >Go to Find Orders.</a>", 0, 848, 2,
+                 1);
+
+             echo '<pre>';
+             print_r($r);
+             echo '</pre>';*/
+
+            //$b=$this->Boosters_Applicant_Instance->Booster_instance->add_to_balance(830,1);
+            //var_dump($b);
+            exit;
+        }
+    }
+
+    /**
+     * AJAX - Request from order-received page
+     */
+    public function gladiator_redirect_to_chat()
+    {
+        $order_number = (int)$_POST['order_number'];
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'chat_id'=>$this->Chat_Booster_Customer_Instance->get_chat_by_order_id($order_number),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin remove user from chat
+     */
+    public function gladiator_dashboard_booster_order_screen_shot()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            '$_FILES'=>$_FILES,
+            'set_order_completed'=>$this->Boosters_Applicant_Instance->booster_order_screen_shot(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin remove user from chat
+     */
+    public function gladiator_dashboard_admin_remove_user_from_chat()
+    {
+        echo json_encode([
+            'result'=> $this->Chat_Booster_Customer_Instance->admin_remove_user_from_chat((int)$_POST['chat_id'],(int)$_POST['user_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin add user to chat
+     */
+    public function gladiator_dashboard_admin_add_user_to_chat()
+    {
+        echo json_encode([
+            'result'=> $this->Chat_Booster_Customer_Instance->admin_add_user_to_chat((int)$_POST['user_add'],(int)$_POST['chat_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin get user list to chat
+     */
+    public function gladiator_dashboard_admin_get_users_list()
+    {
+        echo json_encode([
+            'user_add_list'=> $this->Chat_Booster_Customer_Instance->admin_get_users_list(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin delete any message in chat
+     */
+    public function gladiator_dashboard_admin_delete_chat()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->admin_delete_chat((int)$_POST['chat_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin delete any message in chat
+     */
+    public function gladiator_dashboard_admin_chat_delete_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->admin_delete_message((int)$_POST['message_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin edit any message in chat
+     */
+    public function gladiator_dashboard_admin_chat_edit_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->admin_chat_edit_message(
+                (int)$_POST['message_id'],
+                $_POST['message']
+            ),
+        ]);
+        wp_die();
+    }
+
+
+    /**
+     * AJAX - Admin send message to chat
+     */
+    public function gladiator_dashboard_admin_chat_send_message()
+    {
+        global $wp_filter;
+        $all_filters = $wp_filter;
+
+        foreach ($all_filters as $hook => $hook_filters) {
+            remove_all_filters($hook);
+        }
+
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->admin_chat_send_message((int)$_POST['chat_id'],$_POST['message']),
+        ]);
+        wp_die();
+    }
+
+
+    /**
+     * AJAX - Admin load chats
+     */
+    public function gladiator_dashboard_admin_chat_list()
+    {
+        echo json_encode([
+            'chat_list'=> $this->Chat_Booster_Customer_Instance->get_list_chats_admin(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin load messages to chat
+     */
+    public function gladiator_dashboard_admin_chat_load_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->get_list_chat_messages_admin((int)$_POST['chat_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * Create empty start chat if order completed
+     *
+     * @param $order_id
+     */
+    public function woocommerce_order_status_completed($order_id)
+    {
+        //$this->create_new_chat_on_order($order_id);
+    }
+
+    public function create_new_chat_on_order($order_id)
+    {
+        $order = wc_get_order($order_id);
+        if ($order && count($order->get_items()) > 0) {
+            $items = $order->get_items();
+            foreach ($items as $item_id => $item)
+            {
+                $product_id = $item->get_product_id();
+                $this->Chat_Booster_Customer_Instance->create(
+                    0,
+                    $order_id,
+                    $product_id,
+                    0,
+                    1,
+                    'Weclome to the order'
+                );
+            }
+        }
+    }
+
+    public function woocommerce_new_order($order_id)
+    {
+        //$this->create_new_chat_on_order($order_id);
+        //$this->Notifications_Instance->create("You have a new order #$order_id",0,0,1,1);
+    }
+
+    /**
+     * AJAX - get notification
+     */
+    public function gladiator_dashboard_delete_notify_all()
+    {
+        echo json_encode([
+            'notification'=> $this->Notifications_Instance->delete_notify_all(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get notification
+     */
+    public function gladiator_dashboard_read_notify_all()
+    {
+        echo json_encode([
+            'notification'=> $this->Notifications_Instance->read_notify_all(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get notification
+     */
+    public function gladiator_dashboard_delete_notify()
+    {
+        echo json_encode([
+            'notification'=> $this->Notifications_Instance->delete_notify((int)$_POST['notify_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - ADMIN get notification
+     */
+    public function gladiator_dashboard_admin_get_notification()
+    {
+        echo json_encode([
+            'notification'=> $this->Notifications_Instance->get_notification(1),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get notification
+     */
+    public function gladiator_dashboard_get_notification()
+    {
+        echo json_encode([
+            'notification'=> $this->Notifications_Instance->get_notification(3),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Get chat user activity
+     */
+    public function gladiator_dashboard_get_chat_user_activity()
+    {
+        echo json_encode([
+            'chat_time_activity'=> $this->Chat_Booster_Customer_Instance->get_chat_user_activity($_POST['users_ids']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Chat user activity
+     */
+    public function gladiator_dashboard_chat_user_activity()
+    {
+        echo json_encode([
+            'chat_user_activity'=> $this->Chat_Booster_Customer_Instance->chat_user_activity($_POST['is_window_active']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Set message status
+     */
+    public function gladiator_dashboard_chat_set_message_status()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->set_message_status(
+                (int)$_POST['message_id'],
+                (int)$_POST['status'],
+            ),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer edit message from chat
+     */
+    public function gladiator_dashboard_customer_chat_edit_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->customer_update_message(
+                (int)$_POST['message_id'],
+                $_POST['message']
+            ),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer delete message from chat
+     */
+    public function gladiator_dashboard_customer_chat_delete_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->customer_delete_message((int)$_POST['message_id'],(int)$_POST['booster_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer send message to chats
+     */
+    public function gladiator_dashboard_customer_chat_send_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->customer_chat_send_message((int)$_POST['chat_id'],$_POST['message'],(int)$_POST['booster_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer get list message to chats
+     */
+    public function gladiator_dashboard_customer_chat_load_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->get_list_chat_messages_current_customer((int)$_POST['chat_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer get list chats
+     */
+    public function gladiator_dashboard_customer_chat_list()
+    {
+        echo json_encode([
+            'chat_list'=> $this->Chat_Booster_Customer_Instance->get_list_chats_current_customer(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster edit message from chat
+     */
+    public function gladiator_dashboard_booster_chat_edit_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->booster_update_message(
+                (int)$_POST['message_id'],
+                $_POST['message']
+            ),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster delete message from chat
+     */
+    public function gladiator_dashboard_booster_chat_delete_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->booster_delete_message((int)$_POST['message_id'],(int)$_POST['booster_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster send message to chats
+     */
+    public function gladiator_dashboard_booster_chat_send_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->booster_add_message((int)$_POST['chat_id'],$_POST['message'],(int)$_POST['customer_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster get list message to chats
+     */
+    public function gladiator_dashboard_booster_chat_load_message()
+    {
+        echo json_encode([
+            'chat_messages'=> $this->Chat_Booster_Customer_Instance->get_list_chat_messages_current_booster((int)$_POST['chat_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster get list chats
+     */
+    public function gladiator_dashboard_booster_chat_list()
+    {
+        echo json_encode([
+            'chat_list'=> $this->Chat_Booster_Customer_Instance->get_list_chats_current_booster(),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer save profile
+     */
+    public function gladiator_dashboard_customer_save_profile()
+    {
+        $this->customer_panel_Instance->save_profile();
+        echo json_encode([
+            '$_POST'=>$_POST,
+            '$_FILES'=>$_FILES,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Customer list orders
+     */
+    public function gladiator_dashboard_customer_order_list()
+    {
+        $orders = $this->customer_panel_Instance->get_orders((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'list_orders'=>$orders['list_orders'],
+            'total_pages'=>$orders['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster save subscribe
+     */
+    public function gladiator_dashboard_booster_save_subscribe_order()
+    {
+        $subscribe_category = (isset($_POST['subscribe_category']))?$_POST['subscribe_category']:[];
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'subscribe_category'=>$this->booster_subscribe_category_Instance->save_subscribe_category($subscribe_category),
+        ]);
+        wp_die();
+    }
+
+
+    /**
+     * AJAX - Booster delete withdraw
+     */
+    public function gladiator_dashboard_booster_withdrawal_delete()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'withdrawal_delete'=> $this->Boosters_Withdrawal_Instance->booster_withdrawal_delete((int)$_POST['withdrawal_id']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster withdraw list
+     */
+    public function gladiator_dashboard_booster_withdrawal_list()
+    {
+        $all_list = $this->Boosters_Withdrawal_Instance->get_list_booster((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'lists'=>$all_list['lists'],
+            'total_pages'=>$all_list['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin confirm withdraw
+     */
+    public function gladiator_dashboard_admin_confirm_paid()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'confirm_paid'=>$this->Boosters_Withdrawal_Instance->change_status((int)$_POST['withdrawal_id'],2),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin delete withdraw
+     */
+    public function gladiator_dashboard_admin_delete_withdrawal()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'delete_withdrawal'=>$this->Boosters_Withdrawal_Instance->delete_withdrawal((int)$_POST['withdrawal_id']),
+        ]);
+        wp_die();
+    }
+    /*
+     * AJAX - Booster create withdraw
+     */
+    public function gladiator_dashboard_booster_create_withdraw()
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        $withdrawal = $_POST['withdrawal'];
+        $amount = (float)$withdrawal['amount'];
+        $payment_method =$withdrawal['payment_method'];
+        $current_balance = $this->Booster_Instance->get_balance($user_id);
+
+        if (
+            $amount>0 &&
+            $amount<=$current_balance &&
+            $payment_method!=""
+        ) {
+            $create_withdrawal =
+                $this->Boosters_Withdrawal_Instance->create_withdrawal($user_id, $amount, $payment_method);
+        }
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'create_withdrawal'=>$create_withdrawal,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster save payment method
+     */
+    public function gladiator_dashboard_booster_save_payment_method()
+    {
+        $save_payment_method = $this->Booster_Instance->save_payment_method($_POST['payment_fields']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'save_payment_method'=>$save_payment_method,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin confirm order completed
+     */
+    public function gladiator_dashboard_admin_confirm_order_completed()
+    {
+        $set_order_completed = $this->Boosters_Applicant_Instance->admin_confirm_complection((int)$_POST['completion_id']);
+        if (!count($set_order_completed))
+        {
+            $set_order_completed['status'] = false;
+        }
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'set_order_completed'=>$set_order_completed['status'],
+            'current_balance'=>$set_order_completed['current_balance'],
+            'sum_to_boosters'=>$set_order_completed['sum_to_boosters'],
+            'update_balance'=>$set_order_completed['update_balance'],
+            'boosters_id'=>$set_order_completed['boosters_id'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     *  AJAX - Booster set order completed
+     */
+    public function gladiator_dashboard_booster_set_order_completed()
+    {
+        $set_order_completed = $this->Boosters_Applicant_Instance->set_order_completed((int)$_POST['booster_applicants_id'],'complected');
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'set_order_completed'=>$set_order_completed,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster get list order if status 2 (in work)
+     */
+    public function gladiator_dashboard_booster_my_order_list()
+    {
+        $orders = $this->booster_orders_Instance->get_booster_order_list_worked((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'list_orders'=>$orders['list_orders'],
+            'total_pages'=>$orders['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Admin set order to work booster
+     */
+    public function gladiator_dashboard_set_order_to_booster()
+    {
+        $order_id = (int)$_POST['order_id'];
+        $boosters_id = (int)$_POST['boosters_id'];
+
+        $user_info = get_userdata($boosters_id);
+        $this->Notifications_Instance->create("Booster $user_info->user_login has been assigned to order #$order_id",0,$boosters_id,2,1);
+
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'status'=> $this->Boosters_Applicant_Instance->set_status((int)$_POST['booster_applicants_id'],'pass'),
+            'chat_init'=>$this->Chat_Booster_Customer_Instance->create(
+                (int)$_POST['boosters_id'],
+                (int)$_POST['order_id'],
+                (int)$_POST['product_id'],
+                (int)$_POST['booster_applicants_id']
+            )
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster change avatar
+     */
+    public function gladiator_dashboard_booster_change_avatar()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            '$_FILES'=>$_FILES,
+            'change_avatar'=>$this->Booster_Instance->change_avatar($_FILES),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster want order. Remove Applicant
+     */
+    public function gladiator_dashboard_booster_cancel_want_order()
+    {
+        $delete_applicant = $this->Boosters_Applicant_Instance->delete_applicant((int)$_POST['booster_applicants_id']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            '$delete_applicant'=>$delete_applicant,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster want order. Create Applicant
+     */
+    public function gladiator_dashboard_booster_want_order()
+    {
+        if (
+            isset($_POST['product_id']) &&
+            isset($_POST['order_id']) &&
+            isset($_POST['start_time']) &&
+            isset($_POST['eta']) &&
+            (int)$_POST['product_id']>0 &&
+            (int)$_POST['order_id']>0 &&
+            $_POST['start_time']!="" &&
+            $_POST['eta']!=""
+        )
+        {
+            $order = wc_get_order((int)$_POST['order_id']);
+
+            if ( $order )
+            {
+                $current_user = wp_get_current_user();
+                $user_id = $current_user->ID;
+                $user_role = $current_user->roles[0];
+
+                if ( $user_id && $user_role==booster_role_name )
+                {
+                    $applicant = $this->Boosters_Applicant_Instance->create_applicant($user_id,(int)$_POST['order_id'],(int)$_POST['product_id'],$_POST['start_time'],$_POST['eta']);
+                }
+
+            }
+        }
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'booster_applicants'=>$applicant,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster order filter
+     */
+    public function gladiator_dashboard_booster_order_filter()
+    {
+        $this->booster_orders_Instance->filter_request=$_POST['filter_request'];
+        $orders = $this->booster_orders_Instance->get_booster_order_list_filter((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'list_orders'=>$orders['list_orders'],
+            'total_pages'=>$orders['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Booster order list
+     */
+    public function gladiator_dashboard_booster_order_list()
+    {
+        $orders = $this->booster_orders_Instance->get_booster_order_list((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'list_orders'=>$orders['list_orders'],
+            'total_pages'=>$orders['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get list withdrawal
+     */
+    public function gladiator_dashboard_get_withdrawal_app()
+    {
+        $all_list = $this->Boosters_Withdrawal_Instance->get_all_list((int)$_POST['paged']);
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'lists'=>$all_list['lists'],
+            'total_pages'=>$all_list['total_pages'],
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get completion order
+     */
+    public function gladiator_dashboard_admin_order_completion_app()
+    {
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'lists'=>$this->Boosters_Applicant_Instance->get_list_applicants_by_status('complected'),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * The TEST creation applicant from boosters for order
+     */
+    public function _test_create_boosters_app()
+    {
+        echo '<pre>';
+        print_r([
+            $this->Boosters_Applicant_Instance->create_applicant(505,2606, 149,'2023-08-10','2023-08-15'),
+            $this->Boosters_Applicant_Instance->create_applicant(506,2617, 226,'2023-08-12','2023-08-16'),
+        ]);
+        echo '</pre>';
+    }
+
+    public function _test_withdrawal()
+    {
+        echo '<pre>';
+        print_r([
+            $this->Boosters_Withdrawal_Instance->create_withdrawal(505,120,'PayPal: PayPal@gmail.com '),
+        ]);
+        echo '</pre>';
+    }
+
+    /**
+     * AJAX - get orders list if have  applicant/pretendet
+     */
+    public function gladiator_dashboard_get_order_list_choice_app()
+    {
+        if ( !$this->access_action() )
+        {
+            wp_die();
+        }
+
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'gets_orders'=>$this->_get_orders_chooice_boosters((int)$_POST['paged']),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - get applicant/pretendet list to order
+     */
+    public function gladiator_dashboard_boosters_list()
+    {
+        $orderID = (int)$_POST['order_id'];
+        $product_id = (int)$_POST['product_id'];
+        echo json_encode([
+            'booster_list'=>$this->Boosters_Applicant_Instance->get_applicants_by_orderID($orderID,$product_id),
+        ]);
+        wp_die();
+    }
+
+    /**
+     * Get list users by user role
+     *
+     * @param string $role
+     * @return array
+     */
+    public function get_user_list_by_role($role='boosters')
+    {
+        $users = get_users(array(
+            'role' => $role,
+        ));
+
+        $user_list=[];
+
+        if (!empty($users)) {
+            foreach ($users as $user) {
+                $user_list[]=$user;
+            }
+        }
+
+        return $user_list;
+    }
+
+    /**
+     * AJAX - Clear admin order price
+     */
+    public function gladiator_dashboard_clear_order_price()
+    {
+        $orderId = (int)$_POST['orderId'];
+        $product_id = (int)$_POST['product_id'];
+        if ( $orderId && $product_id ) {
+            $order = wc_get_order($orderId);
+            if ($order) {
+                $boosters_products_prices = get_post_meta($orderId,$this->order_options['boosters_products_prices'],1);
+                /*  delete_post_meta($orderId, $this->order_options['is_set_price']);
+                  delete_post_meta($orderId, $this->order_options['display_boosters_panel']);
+                  delete_post_meta($orderId, $this->order_options['boosters_price']);*/
+
+                if (is_array($boosters_products_prices) && count($boosters_products_prices)) {
+                    if ( array_key_exists($product_id,$boosters_products_prices))
+                    {
+                        unset($boosters_products_prices[$product_id]);
+                        update_post_meta($orderId, $this->order_options['boosters_products_prices'], $boosters_products_prices);
+                    }
+                }
+            }
+        }
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'orderId'=>$orderId,
+            'product_id'=>product_id,
+            'boosters_products_prices'=>$boosters_products_prices,
+        ]);
+        wp_die();
+    }
+
+    /**
+     * AJAX - Set admin order price
+     */
+    public function gladiator_dashboard_set_order_price()
+    {
+        $orderId = (int)$_POST['orderId'];
+        $product_id = (int)$_POST['product_id'];
+        $price = (float)$_POST['price'];
+
+        if ( $orderId && $price && $product_id )
+        {
+            $order = wc_get_order($orderId);
+            if ($order ) {
+                $a[]=0;
+                $boosters_products_prices = get_post_meta($orderId,$this->order_options['boosters_products_prices'],1);
+                if (is_array($boosters_products_prices) && count($boosters_products_prices)) {
+                    $boosters_products_prices[$product_id]=$price;
+                    $a[]=1;
+                }
+                else
+                {
+                    $boosters_products_prices=[];
+                    $boosters_products_prices[$product_id]=$price;
+                    $a[]=2;
+                }
+                // $boosters_products_prices[$product_id]=$price;
+                update_post_meta($orderId, $this->order_options['boosters_products_prices'], $boosters_products_prices);
+                update_post_meta($orderId, 'boosters_products_prices_time', time());
+
+
+                //-------- NOTIFICATION USER SUBS CAT --
+                $terms = wp_get_post_terms($product_id, 'product_cat');
+                if (!empty($terms)) {
+                    $product_cats=[];
+                    foreach ($terms as $term)
+                    {
+                        $product_cats[]= $term->term_id;
+                    }
+
+                    $rusers = $this->booster_subscribe_category_Instance->get_users__subscribe_categorys();
+
+                    $notification_users_ids = array_keys(array_filter($rusers, function ($value) use ($product_cats) {
+                        return count(array_intersect($value, $product_cats)) > 0;
+                    }));
+
+                    if ( count($notification_users_ids) )
+                    {
+                        foreach ($notification_users_ids as $booster_id)
+                        {
+                            $in_work = $this->Boosters_Applicant_Instance->get_applicants_work_status_by_order_id($orderId);
+                            if (!$in_work) {
+                                $this->Notifications_Instance->create("New order #$orderId is available. <a href='https://gladiatorboost.com/booster_find_orders/' >Go to Find Orders.</a>", 0, $booster_id, 2,
+                                    1);
+                            }
+                        }
+
+                    }
+
+                }
+
+                //-------- /NOTIFICATION USER SUBS CAT --
+            }
+        }
+
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'orderId'=>$orderId,
+            'product_id'=>$product_id,
+            'price'=>$price,
+            '$a'=>$a,
+        ]);
+        wp_die();
+    }
+
+    public function isDateLessThan7DaysAgo($dateTimestamp)
+    {
+        $currentTimestamp = time();
+        $sevenDaysAgoTimestamp = strtotime('-7 days', $currentTimestamp);
+        if ($dateTimestamp < $sevenDaysAgoTimestamp) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * AJAX - Get new order list
+     */
+    public function gladiator_dashboard_get_order_list()
+    {
+        if ( !$this->access_action() )
+        {
+            wp_die();
+        }
+
+        echo json_encode([
+            '$_POST'=>$_POST,
+            'gets_orders'=>$this->_get_orders((int)$_POST['paged']),
+        ]);
+        wp_die();
+    }
+
+    public function register_ajax_action()
+    {
+        foreach ($this->ajax_action_list as $action_calback)
+        {
+            add_action( "wp_ajax_{$action_calback}", array($this, $action_calback) );
+            add_action( "wp_ajax_nopriv_{$action_calback}", array($this, $action_calback));
+        }
+    }
+
+    /**
+     * For Choosing applicant for order
+     *
+     * @param int $paged
+     * @return array
+     */
+    public function _get_orders_chooice_boosters($paged=1)
+    {
+        // Call WooCommerce function to retrieve completed orders
+        $args = array(
+            'posts_per_page' => -1,
+            // 'paged' => $paged,
+            'post_type' => 'shop_order',
+            'post_status' => ['wc-completed','wc-processing'],
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_key' => '_order_total',  // Meta key for order total
+            'meta_query' => array(
+                array(
+                    'key' => $this->order_options['boosters_products_prices'],
+                    'compare' => 'EXISTS'  // Вибірка тільки тих замовлень, де це мета-поле існує
+                )
+            )
+        );
+
+        $orders_query = new WP_Query($args);
+
+        $orders = $orders_query->posts;
+        $total_pages = $orders_query->max_num_pages;
+
+        // Process the retrieved orders products
+        $order_products = [];
+
+        foreach ($orders as $order) {
+            $order_id = $order->ID;
+
+            $in_work_status =$this->Boosters_Applicant_Instance->get_applicants_work_status_by_order_id($order_id);
+            $in_complected_status =$this->Boosters_Applicant_Instance->get_applicants_complected_status_by_order_id($order_id);
+            $in_confirmed_admin_status =$this->Boosters_Applicant_Instance->get_applicants_confirmed_admin_by_order_id($order_id);
+
+            if ( $in_work_status || $in_complected_status || $in_confirmed_admin_status ) continue;
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+            $order_info_add=[];
+            foreach ($additional_fields as $field_key => $field_values) {
+                // Exclude fields starting with '_customer...' or '_billing...'
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 && strpos($field_key, 'Payer') !==0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            $items = $order->get_items();
+
+
+            $boosters_products_prices = get_post_meta($order_id, $this->order_options['boosters_products_prices'],1);
+
+
+            foreach ($items as $item) {
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+
+                $product = wc_get_product($product_id);
+
+                if ( !$product ) {
+                    continue;
+                }
+
+                $product_name = $product->get_name();
+                $product_price = $product->get_price();
+                $product_sku = $product->get_sku();
+
+                if ($variation_id) {
+                    $variation_product = wc_get_product($variation_id);
+                    $attributes = $variation_product->get_variation_attributes();
+                    if (isset($attributes['attribute_region'])) {
+                        $region = $attributes['attribute_region'];
+                    }
+                }
+
+                if ( isset($boosters_products_prices[$product_id]) ) {
+                    $order_products[] = [
+                        'id' => $product_id,
+                        'order_id' => $order_id,
+                        'product_name' => $product_name,
+                        'product_price' => $product_price,
+                        'region' => $region,
+                        'meta' => $item->get_formatted_meta_data(),
+                        'boosters_products_prices' => isset($boosters_products_prices[$product_id]) ?
+                            $boosters_products_prices[$product_id] : 0,
+                        'order_info_add' => $order_info_add,
+                        'applicants_info' => $this->Boosters_Applicant_Instance->get_status($order_id,$product_id),
+                    ];
+                }
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+    /**
+     * For Order list
+     *
+     * @param int $paged
+     * @return array
+     */
+    public function _get_orders($paged=1)
+    {
+        /*
+         * SQL variant get orders : SELECT `wp_postmeta`.*, `wp_users`.`ID` FROM `wp_postmeta`,`wp_users` WHERE `wp_postmeta`.`meta_key`='_billing_email' AND `wp_users`.`user_email`=`wp_postmeta`.`meta_value`;
+         *
+         */
+        // Call WooCommerce function to retrieve completed orders
+        $args = array(
+            'posts_per_page' => 10,
+            'paged' => $paged,
+            'post_type' => 'shop_order',
+            'post_status' => ['wc-completed','wc-processing'],
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_key' => '_order_total',  // Meta key for order total
+        );
+
+        if (isset($_POST['orderId']) && (int)$_POST['orderId']>0 )
+        {
+            $args['p'] = (int)$_POST['orderId'];
+        }
+
+        $orders_query = new WP_Query($args);
+
+        $orders = $orders_query->posts;
+        $total_pages = $orders_query->max_num_pages;
+
+        // Process the retrieved orders products
+        $order_products = [];
+
+        foreach ($orders as $order) {
+            $order_id = $order->ID;
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+            $order_info_add=[];
+            foreach ($additional_fields as $field_key => $field_values) {
+                // Exclude fields starting with '_customer...' or '_billing...'
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 && strpos($field_key, 'Payer') !==0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            $items = $order->get_items();
+
+
+            $boosters_products_prices = get_post_meta($order_id,$this->order_options['boosters_products_prices'],1);
+            $customer_note = $order->get_customer_note();
+
+            $discord_id = get_post_meta($order_id, '_billing_discord_id', 1);
+            if($discord_id=='')
+                $discord_id = get_post_meta($order_id,'billing_discord_id',1);
+
+
+            foreach ($items as $item) {
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+                $qty = $item->get_quantity();
+                $product = wc_get_product($product_id);
+
+                if ( !$product ) {
+                    continue;
+                }
+
+                $product_name = $product->get_name();
+                $product_price = $product->get_price();
+                $product_sku = $product->get_sku();
+
+                $formatted_meta_data = $item->get_formatted_meta_data();
+
+                $region='';
+                if ($variation_id) {
+                    $variation_product = wc_get_product($variation_id);
+                    $attributes = $variation_product->get_variation_attributes();
+                    if (isset($attributes['attribute_region'])) {
+                        $region = $attributes['attribute_region'];
+                        //unset($attributes['attribute_region']);
+                    }
+
+                    if ( count($attributes) )
+                    {
+                        $product_attributes = $item->get_product()->get_attributes();
+                        foreach ( $product_attributes as $attribute_name => $attribute )
+                        {
+                            if ($attribute_name=='region') {
+                                if (trim($region)=="")
+                                    $region = $attribute;
+                                continue;
+                            }
+                            $attribute_label = wc_attribute_label( $attribute_name );
+                            $formatted_attribute_label = ucfirst( $attribute_label );
+                            // $attributes_meta[$formatted_attribute_label] = $attribute;
+
+                            $formatted_meta_data[]=[
+                                'display_key'=>$formatted_attribute_label,
+                                'value'=>$attribute,
+                            ];
+                        }
+                    }
+                }
+
+                $order_products[]=[
+                    'id'=>$product_id,
+                    'order_id'=>$order_id,
+                    'product_name'=>$product_name,
+                    'product_price'=>$product_price,
+                    'region'=>$region,
+                    'meta'=>$formatted_meta_data,
+                    '$product_attributes'=>$product_attributes,
+                    'order_meta'=>$order->get_meta_data(),
+                    'boosters_products_prices'=>isset($boosters_products_prices[$product_id])?$boosters_products_prices[$product_id]:0,
+                    'order_info_add'=>$order_info_add,
+                    'customer_note'=>$customer_note,
+                    'qty'=>$qty,
+                    'discord_id'=>$discord_id,
+                ];
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+    /**
+     * Get list dashboard pages for out list _gladiator_dashboard_tabs
+     *
+     * @return array
+     */
+    public function _get_list_dashboard_pages($type='')
+    {
+        $args = array(
+            'post_type' => 'page',
+            'posts_per_page' => -1,
+        );
+
+        if ( !$type )
+        {
+            $args['meta_query']=array(
+                array(
+                    'key' => 'is_dashboards',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            );
+        }
+        else
+        {
+            switch ($type)
+            {
+                case 'booster':
+                    $args['meta_query']=array(
+                        array(
+                            'key' => 'gladiator_dash_board_type',
+                            'value' => 'booster',
+                            'compare' => '='
+                        )
+                    );
+                    break;
+                case 'customer':
+                    $args['meta_query']=array(
+                        array(
+                            'key' => 'gladiator_dash_board_type',
+                            'value' => 'customer',
+                            'compare' => '='
+                        )
+                    );
+                    break;
+            }
+        }
+
+
+        $query = new WP_Query($args);
+        $pages = $query->posts;
+
+        $list=[];
+        if (count($pages))
+        {
+            foreach ($pages as $page)
+            {
+                $list[]=[
+                    'ID'=>$page->ID,
+                    'title'=>$page->post_title,
+                    'url'=>get_permalink($page->ID),
+                    'template'=>get_post_meta($page->ID,'_wp_page_template',1),
+                ];
+            }
+        }
+
+        return $list;
+    }
+
+    private function access_action($role='administrator')
+    {
+        if ( is_user_logged_in() && (current_user_can($role) || current_user_can(admin_panel_role_name) )) {
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     *
+     * @param $shortcode
+     * @return bool
+     */
+    public function get_page_id_by_shortcode($shortcode) {
+        $pages = get_pages();
+        foreach ($pages as $page) {
+            $content = $page->post_content;
+            if (strpos($content, $shortcode) !== false) {
+                return $page->ID;
+            }
+        }
+        return false;
+    }
+    //-----------------------------------------------------------
+
+    /**
+     * The test clear post types :
+     * boosters_withdrawal
+     * booster_applicant
+     */
+    public function clear_data()
+    {
+        $args = array(
+            'post_type' => array('boosters_withdrawal', 'booster_applicant'),
+            'posts_per_page' => -1,
+        );
+        $query = new WP_Query($args);
+        $posts = $query->posts;
+
+        if (is_array($posts) && count($posts)) {
+            foreach ($posts as $key => $item) {
+                echo "DELETE: $item->ID <br>\n";
+                wp_delete_post($item->ID, true);
+            }
+        }
+    }
+}
+
+/**
+ * Applicant status
+ * '1'=>'new',
+ * '2'=>'pass',
+ * '3'=>'complected',
+ * '4'=>'admin_confirm_complect',
+ *
+ * Class booster_applicant_status
+ */
+
+class booster_applicant_status
+{
+    private $post_type = '';
+    public $status=[];
+
+    public function __construct($post_type='') {
+        $this->post_type = $post_type;
+        $this->status=[
+            '1'=>'new',
+            '2'=>'pass',
+            '3'=>'complected', // set booster
+            '4'=>'admin_confirm_complect', // set admin (confirm completed) after booster
+        ];
+    }
+
+    public function get_status_code($status='')
+    {
+        return array_search($status, $this->status);
+    }
+
+    public function get_status($applicant_id=0)
+    {
+        return get_post_meta($applicant_id, 'booster_status', true);
+    }
+
+    /**
+     * Set status applicant : new, pass, complected, admin_confirm_complect
+     *
+     * @param int $applicant_id
+     * @param string $status
+     */
+    public function set_status($applicant_id=0, $status='')
+    {
+        if (method_exists($this, $status)) {
+            return update_post_meta($applicant_id, 'booster_status', $this->{$status}());
+        }
+
+        return false;
+    }
+
+    /*public function get_status($boosters_id='',$order_id='')
+    {
+        $args = array(
+            'posts_per_page' => -1,
+            'post_type' =>  $this->post_type,
+            'post_status' => 'publish',
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'key' =>'boosters_id',
+                    'value' => $boosters_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+
+        $query = new WP_Query($args);
+    }*/
+
+    /**
+     * Booster send request for order to admin
+     *
+     * @return int
+     */
+    public function new()
+    {
+        return 1;
+    }
+
+    /**
+     * Booster start for order
+     *
+     * @return int
+     */
+    public function pass()
+    {
+        return 2;
+    }
+
+    /**
+     * Booster completed the order
+     *
+     * @return int
+     */
+    public function complected()
+    {
+        return 3;
+    }
+
+    /**
+     * Admin confirm completion
+     *
+     * @return int
+     */
+    public function admin_confirm_complect()
+    {
+        return 4;
+    }
+}
+
+class Booster
+{
+    private $allowedMimeTypes_list = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'png'  => 'image/png',
+        'bmp'  => 'image/bmp',
+        'webp' => 'image/webp',
+        'tiff' => 'image/tiff',
+        'ico'  => 'image/x-icon',
+        'svg'  => 'image/svg+xml',
+    ];
+    private $maxFileSize = 10 * 1024 * 1024; //10 MB
+    private $booster_balance_filed_name ='booster_balance';
+
+    public function __construct() {
+
+    }
+
+    /**
+     * Save booster payment methods
+     *
+     * @param string $booster_paypal
+     * @param string $booster_wiseemail
+     * @param string $booster_usdt_trc20
+     * @return bool
+     */
+    public function save_payment_method($payment_fields=[])
+    {
+        $current_user = wp_get_current_user();
+        if ( $current_user->ID>0 )
+        {
+            $return=[];
+            foreach ($payment_fields as $key => $item) {
+                $return[$key]=update_field($key, $this->clear(sanitize_text_field($item),256), 'user_' . $current_user->ID);
+            }
+            return $return;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get booster payment methods
+     *
+     * @return array
+     */
+    public function get_payment_methods()
+    {
+        $payment_method=[];
+        $current_user = wp_get_current_user();
+        if ( $current_user->ID>0 )
+        {
+            $payment_method_list=[
+                'booster_paypal',
+                'booster_usdt_trc20',
+                'booster_wiseemail',
+            ];
+
+            foreach ($payment_method_list as $item) {
+                $payment_method[$item]=get_field($item,'user_'.$current_user->ID);
+            }
+        }
+
+        return $payment_method;
+    }
+
+    public function change_avatar($file)
+    {
+        $current_user = wp_get_current_user();
+        if ( isset($file['file']) && $file['file']['error']==0 && $current_user->ID>0 )
+        {
+            $extensions_array = ['jpg', 'jpeg', 'gif', 'png'];
+            $allowedMimeTypes = [];
+            foreach ($extensions_array as $k => $v) {
+                if (isset($this->allowedMimeTypes_list[$v]))
+                    $allowedMimeTypes[] = $this->allowedMimeTypes_list[$v];
+            }
+            if (in_array($file['file']['type'], $allowedMimeTypes) && $file['file']['size'] <= $this->maxFileSize) {
+                $upload_dir = wp_upload_dir();
+                $uploadedFile = $upload_dir['basedir'].'/' . $file['file']['name'];
+                if (move_uploaded_file($file['file']['tmp_name'], $uploadedFile)) {
+
+                    $attachment = array(
+                        'post_mime_type' => $file['file']['type'],
+                        'post_title' => sanitize_file_name($file['file']['name']),
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+                    $attach_id = wp_insert_attachment($attachment, $uploadedFile);
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $uploadedFile);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+
+                    update_field('custom_profile_image', $attach_id, 'user_' . $current_user->ID);
+                }
+            }
+        }
+
+        return $uploadedFile;
+    }
+
+    /**
+     * Get booster balance
+     *
+     * @param int $booster_id
+     * @return float|int
+     */
+    public function get_balance($booster_id=0)
+    {
+        // $current_user = wp_get_current_user();
+        //$booster_balance_get = get_field('booster_balance','user_'.$current_user->ID);
+        $booster_balance_get = get_field($this->booster_balance_filed_name,'user_'.$booster_id);
+
+        $booster_balance = (float)$booster_balance_get?(float)$booster_balance_get:0;
+
+        return $booster_balance;
+    }
+
+    /**
+     * Add summ to booster balance
+     *
+     * @param int $booster_id
+     * @param int $summ
+     * @return mixed
+     */
+    public function add_to_balance($booster_id=0,$summ=0)
+    {
+        $current_balance = $this->get_balance($booster_id);
+        $current_balance +=(float)$summ;
+        return $this->update_balance($booster_id,$current_balance);
+    }
+
+    /**
+     * Minus summ from booster balance
+     *
+     * @param int $booster_id
+     * @param int $value
+     */
+    public function withdrawal_from_balance($booster_id=0,$summ=0)
+    {
+        $current_balance = $this->get_balance($booster_id);
+        if ( $summ<=$current_balance ) {
+            $current_balance = $current_balance - (float)$summ;
+            return $this->update_balance($booster_id, $current_balance);
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Update booster balance
+     *
+     * @param int $booster_id
+     * @param int $value
+     * @return mixed
+     */
+    public function update_balance($booster_id=0,$value=0)
+    {
+        return update_field($this->booster_balance_filed_name, $value, 'user_' . $booster_id);
+    }
+
+    private function clear($text,$len=72)
+    {
+        $text = strip_tags($text);
+        $text = mb_substr($text,0,$len,'UTF-8');
+        return $text;
+    }
+}
+
+class Boosters_Applicant
+{
+    private $post_type='booster_applicant';
+    public $status_instance;
+    public $Booster_instance;
+    public $Notifications_Instance;
+    public $setting_prefix;
+    public $order_options=[];
+    private $maxFileSize = 10 * 1024 * 1024; //10 MB
+    private $allowedMimeTypes_list = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'png'  => 'image/png',
+        'bmp'  => 'image/bmp',
+        'webp' => 'image/webp',
+        'tiff' => 'image/tiff',
+        'ico'  => 'image/x-icon',
+        'svg'  => 'image/svg+xml',
+    ];
+
+    public function __construct($setting_prefix='',$order_options=[])
+    {
+        $this->setting_prefix=$setting_prefix;
+        $this->order_options=$order_options;
+        $this->status_instance = new booster_applicant_status($this->post_type);
+        $this->Booster_instance = new Booster();
+        $this->Notifications_Instance = new gladiator_dashboard_notification();
+    }
+
+
+    /**
+     * Create boosters applicant
+     *
+     * @param string $boosters_id
+     * @param string $order_id
+     * @param string $start_time
+     * @param string $completion_eta
+     * @return array
+     */
+    public function create_applicant($boosters_id='',$order_id='',$product_id='',$start_time='',$completion_eta='')
+    {
+        $post_data = array(
+            'post_title'    => 'applicant_'.$boosters_id,
+            'post_content'  => '',
+            'post_status'   => 'publish',
+            'post_author'   => 1,
+            'post_type'     => $this->post_type,
+        );
+
+        $new_post_id = wp_insert_post($post_data);
+
+        update_post_meta($new_post_id, 'boosters_id', $boosters_id);
+        update_post_meta($new_post_id, 'order_id', $order_id);
+        update_post_meta($new_post_id, 'product_id', $product_id);
+        update_post_meta($new_post_id, 'start_time', $start_time);
+        update_post_meta($new_post_id, 'completion_eta', $completion_eta);
+        update_post_meta($new_post_id, 'booster_status', $this->status_instance->new());
+        update_post_meta($new_post_id, 'screen_shot_id', 0);
+
+        $user_info = get_userdata($boosters_id);
+        $this->Notifications_Instance->create("Booster $user_info->user_login created an application for a order #$order_id" ,0,0,1,1);
+
+        return [
+            'ID'=>$new_post_id,
+            'boosters_id'=>$boosters_id,
+            'order_id'=>$order_id,
+            'start_time'=>$start_time,
+            'completion_eta'=>$completion_eta,
+        ];
+
+    }
+
+    public function delete_applicant($booster_applicants_id=0)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        $args = array(
+            'post_type' => 'booster_applicant',
+            'post_status' => 'any',
+            'posts_per_page' => -1,
+            'p'=>$booster_applicants_id,
+            'meta_query' => array(
+                array(
+                    'key' => 'boosters_id',
+                    'value' => $user_id,
+                    'compare' => '=',
+                ),
+            ),
+        );
+
+        $query = new WP_Query($args);
+        $a=$query->posts;
+
+        $result=false;
+        if (count($a))
+        {
+            $result = wp_delete_post($booster_applicants_id, true);
+        }
+
+        return $result;
+    }
+
+    public function get_applicants_by_orderID($order_id=0,$product_id=0)
+    {
+        $args = array(
+            'posts_per_page' => -1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'publish',
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'product_id',
+                    'value' => $product_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+
+        $applicants_query = new WP_Query($args);
+
+        $applicants = $applicants_query->posts;
+        // $total_pages = $applicants_query->max_num_pages;
+
+        $applicants_list=[];
+        foreach ($applicants as $item)
+        {
+            $boosters_id = get_post_meta($item->ID,'boosters_id',1);
+            $user_boosters = get_user_by('ID', $boosters_id);
+            $applicants_list[]=[
+                'ID'=>$item->ID,
+                'boosters_id'=>$boosters_id,
+                'order_id'=>get_post_meta($item->ID,'order_id',1),
+                'product_id'=>get_post_meta($item->ID,'product_id',1),
+                'start_time'=>get_post_meta($item->ID,'start_time',1),
+                'completion_eta'=>get_post_meta($item->ID,'completion_eta',1),
+                'booster_status'=>get_post_meta($item->ID,'booster_status',1),
+                'boosters'=>[
+                    'username' => $user_boosters->user_login,
+                    'email' => $user_boosters->user_email,
+                    'display_name' => $user_boosters->display_name,
+                    'first_name' => $user_boosters->first_name,
+                    'last_name' => $user_boosters->last_name,
+                ]
+            ];
+        }
+
+        return $applicants_list;
+    }
+
+    /**Cheak if booster applicants is in_work
+     *
+     * @param int $order_id
+     * @return bool
+     */
+    public function get_applicants_work_status_by_order_id($order_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'any',
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'booster_status',
+                    'value' => 2,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+        $query = new WP_Query($args);
+
+        if ( count($query->posts) )
+            return true;
+        else
+            return false;
+    }
+
+    /**
+     * Cheak if booster applicants is complected
+     *
+     * @param int $order_id
+     * @return bool
+     */
+    public function get_applicants_complected_status_by_order_id($order_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'publish',
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'booster_status',
+                    'value' => 3,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+        $query = new WP_Query($args);
+
+        if ( count($query->posts) )
+            return true;
+        else
+            return false;
+    }
+
+
+    /**
+     * Cheak if booster applicants is confirm admin
+     *
+     * @param int $order_id
+     * @return bool
+     */
+    public function get_applicants_confirmed_admin_by_order_id($order_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'publish',
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'booster_status',
+                    'value' => 4, // Admin confirm
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+        $query = new WP_Query($args);
+
+        if ( count($query->posts) )
+            return true;
+        else
+            return false;
+    }
+
+    /**
+     * Set applicants status : new, pass, complected, admin_confirm_complect
+     *
+     * @param int $applicant_id
+     * @param string $status
+     */
+    public function set_status($applicant_id=0, $status='')
+    {
+        return $this->status_instance->set_status($applicant_id,$status);
+    }
+
+    /**
+     * Booster set completed
+     *
+     * @param $applicant_id
+     */
+    public function set_order_completed($applicant_id=0)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        if ( !current_user_can('boosters') )
+        {
+            return false;
+        }
+
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'any',
+            'p' =>$applicant_id,
+            'meta_query' => array(
+                array(
+                    'key' =>'boosters_id',
+                    'value' => $user_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                )
+            )
+        );
+
+        $applicants_query = new WP_Query($args);
+        $applicants = $applicants_query->posts;
+
+        if (count($applicants))
+        {
+            $order_id = get_post_meta($applicants[0]->ID, 'order_id', true);
+            $this->Notifications_Instance->create("Order #$order_id has been marked as Completed",0,0,1,1);
+            return $this->set_status($applicants[0]->ID,'complected');
+        }
+
+        return false;
+    }
+
+    /**
+     * Admin confirm booster complection
+     *
+     * @param int $completion_id
+     * @return array
+     */
+    public function admin_confirm_complection($completion_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'any',
+            'p' =>$completion_id,
+        );
+
+        $applicants_query = new WP_Query($args);
+        $applicants = $applicants_query->posts;
+
+        if (count($applicants))
+        {
+            $id = $applicants[0]->ID;
+            $orderId = get_post_meta($id,'order_id',1);
+            $boosters_id = get_post_meta($id,'boosters_id',1);
+            $product_id = get_post_meta($id,'product_id',1);
+
+            $boosters_products_prices = get_post_meta($orderId,$this->order_options['boosters_products_prices'],1);
+
+            $boosters_price = $boosters_products_prices[$product_id];
+
+            $current_balance = $this->Booster_instance->get_balance($boosters_id);
+            $add_to_balance = $this->Booster_instance->add_to_balance($boosters_id,$boosters_price);
+
+            $this->Notifications_Instance->create("Your order #$orderId was confirmed completed by admin.",0,$boosters_id,3,1);
+
+            return [
+                'status'=>$this->set_status($applicants[0]->ID,'admin_confirm_complect'),
+                'current_balance'=>$current_balance,
+                'sum_to_boosters'=>$boosters_price,
+                'update_balance'=>$add_to_balance,
+                'boosters_id'=>$boosters_id,
+            ];
+        }
+
+        return [];
+    }
+
+    public function booster_order_screen_shot()
+    {
+        $file = $_FILES;
+        $booster_applicants_id = (int)$_POST['booster_applicants_id'];
+
+        $current_user = wp_get_current_user();
+        if ( isset($file['file']) && $file['file']['error']==0 && $current_user->ID>0 )
+        {
+            $extensions_array = ['jpg', 'jpeg', 'gif', 'png'];
+            $allowedMimeTypes = [];
+            foreach ($extensions_array as $k => $v) {
+                if (isset($this->allowedMimeTypes_list[$v]))
+                    $allowedMimeTypes[] = $this->allowedMimeTypes_list[$v];
+            }
+            if (in_array($file['file']['type'], $allowedMimeTypes) && $file['file']['size'] <= $this->maxFileSize) {
+                $upload_dir = wp_upload_dir();
+                $uploadedFile = $upload_dir['basedir'].'/' . $file['file']['name'];
+                if (move_uploaded_file($file['file']['tmp_name'], $uploadedFile)) {
+
+                    $attachment = array(
+                        'post_mime_type' => $file['file']['type'],
+                        'post_title' => sanitize_file_name($file['file']['name']),
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+                    $attach_id = wp_insert_attachment($attachment, $uploadedFile);
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $uploadedFile);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+
+                    update_post_meta($booster_applicants_id, 'screen_shot_id', $attach_id);
+                }
+            }
+        }
+
+        return $uploadedFile;
+    }
+
+    /**
+     * Get status order if isset applicant
+     *
+     * @param int $applicant_id
+     * @return mixed
+     */
+    public function get_status($order_id=0,$product_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'any',
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+                array(
+                    'key' =>'product_id',
+                    'value' => $product_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                ),
+            )
+        );
+
+        $applicants_query = new WP_Query($args);
+        $applicants = $applicants_query->posts;
+
+        if ( count($applicants) )
+        {
+            foreach ($applicants as $k=>$item)
+            {
+                $booster_status = (int)get_post_meta($item->ID, 'booster_status', true);
+                return [
+                    'booster_applicants_id' => $item->ID,
+                    'boosters_id' => get_post_meta($item->ID, 'boosters_id', true),
+                    'start_time' => get_post_meta($item->ID, 'start_time', true),
+                    'completion_eta' => get_post_meta($item->ID, 'completion_eta', true),
+                    'booster_status' => $booster_status,
+                ];
+            }
+        }
+
+        return [];
+    }
+
+    public function cheack_is_applicants($order_id=0)
+    {
+        $args = array(
+            'posts_per_page' => 1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'publish',
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            'meta_query' => array(
+                array(
+                    'key' =>'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC'
+                )
+            )
+        );
+
+        $applicants_query = new WP_Query($args);
+        $applicants = $applicants_query->posts;
+
+        if ( count($applicants) )
+            return true;
+        else
+            return false;
+    }
+
+    /**
+     * Get list applicants by status :  new, pass, complected, admin_confirm_complect
+     *
+     * @param string $booster_status
+     * @return array
+     */
+    public function get_list_applicants_by_status($booster_status='')
+    {
+        $args = array(
+            'posts_per_page' => -1,
+            'post_type'     => $this->post_type,
+            'post_status' => 'publish',
+            'orderby' => array(
+                'ID' => 'DESC'
+            ),
+            'meta_query' => array(
+                array(
+                    'key' =>'booster_status',
+                    'value' => $this->status_instance->get_status_code($booster_status),
+                    'compare' => '=',
+                )
+            )
+        );
+
+        $query = new WP_Query($args);
+        $applicants = $query->posts;
+        $applicants_list=[];
+
+        if (is_array($applicants) && count($applicants))
+        {
+            foreach ($applicants as $key => $item)
+            {
+                $order_id = get_post_meta($item->ID, 'order_id', true);
+                $product_id = get_post_meta($item->ID, 'product_id', true);
+                $boosters_id = get_post_meta($item->ID, 'boosters_id', true);
+
+                //----------------------------------------------------------------
+                $order = wc_get_order($order_id);
+                if (!$order) continue;
+                $items = $order->get_items();
+
+                $product_info = [];
+                foreach ($items as $pitem)
+                {
+                    $p_id = $pitem->get_product_id();
+                    if ( $p_id == $product_id)
+                    {
+                        $product = wc_get_product($product_id);
+                        $product_name = $product->get_name();
+                        $product_info=[
+                            'product_name'=>$product_name,
+                            'meta'=>$pitem->get_formatted_meta_data(),
+                        ];
+
+                        break;
+                    }
+
+                }
+                //----------------------------------------------------------------
+
+                $user_info = get_userdata($boosters_id);
+                $custom_profile_image = get_field('custom_profile_image','user_'.$boosters_id);
+                $screen_shot_id = get_post_meta($item->ID, 'screen_shot_id', true);
+                $screen_url = wp_get_attachment_url($screen_shot_id);
+
+                $applicants_list[]=[
+                    'id'=>$item->ID,
+                    'booster'=>[
+                        'boosters_id'=>$boosters_id,
+                        'first_name'=>$user_info->first_name,
+                        'last_name'=>$user_info->last_name,
+                        'custom_profile_image'=>$custom_profile_image?$custom_profile_image:plugins_url().'/gladiator_dashboard/img/no_avatar.png',
+                    ],
+                    'order_id'=>$order_id,
+                    'product_id'=>$product_id,
+                    'product_info'=>$product_info,
+                    'start_time'=>get_post_meta($item->ID, 'start_time', true),
+                    'completion_eta'=>get_post_meta($item->ID, 'completion_eta', true),
+                    'booster_status'=>get_post_meta($item->ID, 'booster_status', true),
+                    'screen_shot_id'=>$screen_shot_id,
+                    'screen_url'=>$screen_url?$screen_url:plugins_url().'/gladiator_dashboard/img/no_img.jpg',
+
+                    // 'order'=>$order_data
+                ];
+            }
+        }
+
+        return $applicants_list;
+    }
+}
+
+class boosters_withdrawal
+{
+    private $post_type='boosters_withdrawal';
+    private $Booster_Instance;
+
+    public function __construct() {
+        $this->Booster_Instance = new Booster();
+    }
+
+    /**
+     * Create request out money
+     *
+     * @param int $boosters_id
+     * @param int $summ
+     * @param $payment_method
+     * @return array
+     */
+    public function create_withdrawal($boosters_id=0,$summ=0,$payment_method='')
+    {
+        $post_data = array(
+            'post_title'    => 'boosters_withdrawal_'.$boosters_id,
+            'post_content'  => '',
+            'post_status'   => 'publish',
+            'post_author'   => 1,
+            'post_type'     => $this->post_type,
+        );
+
+        $new_post_id = wp_insert_post($post_data);
+
+        update_post_meta($new_post_id, 'boosters_id', $boosters_id);
+        update_post_meta($new_post_id, 'summ', $summ);
+        update_post_meta($new_post_id, 'payment_method', $payment_method);
+        update_post_meta($new_post_id, 'status', 1);
+
+        $this->Booster_Instance->withdrawal_from_balance($boosters_id,$summ);
+
+        $new_balance =  $this->Booster_Instance->get_balance($boosters_id);
+
+
+        return [
+            'withdrawal_id'=>$new_post_id,
+            'boosters_id'=>$boosters_id,
+            'summ'=>$summ,
+            'payment_method'=>$payment_method,
+            'status'=>1,
+            'new_balance'=>$new_balance,
+        ];
+    }
+
+    /**
+     * Admin delete withdrawal
+     *
+     * @param int $withdrawal_id
+     * @return bool
+     */
+    public function delete_withdrawal($withdrawal_id=0)
+    {
+        $p = get_post($withdrawal_id);
+        if ($p) {
+            $summ = (float)get_post_meta($withdrawal_id, 'summ', true);
+            $boosters_id = get_post_meta($withdrawal_id, 'boosters_id', true);
+            $new_balance = $this->Booster_Instance->add_to_balance($boosters_id, $summ);
+            return wp_delete_post($withdrawal_id, true);
+        }
+        return false;
+    }
+
+    /**
+     * Booster delete withdrawal
+     *
+     * @param int $withdrawal_id
+     * @return bool
+     */
+    public function booster_withdrawal_delete($withdrawal_id=0)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        $p = get_post($withdrawal_id);
+        if ($p) {
+            $status = (int)get_post_meta($withdrawal_id, 'status', true);
+            $summ = (float)get_post_meta($withdrawal_id, 'summ', true);
+            $boosters_id = get_post_meta($withdrawal_id, 'boosters_id', true);
+            if ( $user_id==$boosters_id && $status==1 )
+            {
+                $new_balance = $this->Booster_Instance->add_to_balance($boosters_id, $summ);
+                return wp_delete_post($withdrawal_id, true);
+            }
+        }
+
+        return false;
+    }
+    /**
+     * Change status request withdrawal :
+     * 1-new
+     * 2-execute
+     * 3-cancel***
+     *
+     * @param int $withdrawal_id
+     * @param int $status
+     * @return mixed
+     */
+    public function change_status($withdrawal_id=0,$status=0)
+    {
+        return update_post_meta($withdrawal_id, 'status', $status);
+    }
+
+    /**
+     * Get list request withdrawal
+     *
+     * @param int $paged
+     * @return array
+     */
+    public function get_all_list($paged=1)
+    {
+        $args = array(
+            'posts_per_page' => 10,
+            'paged' => $paged,
+            'post_type' => $this->post_type,
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'status',
+                    'value' => 1,
+                    'compare' => '=',
+                ),
+            ),
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+            ),
+        );
+
+        $query = new WP_Query($args);
+        $total_pages = $query->max_num_pages;
+        $withdrawal = $query->posts;
+        $return_list=[];
+        if (is_array($withdrawal) && count($withdrawal))
+        {
+            foreach ($withdrawal as $key => $item)
+            {
+                $boosters_id = get_post_meta($item->ID, 'boosters_id', true);
+                $user_info = get_userdata($boosters_id);
+                $custom_profile_image = get_field('custom_profile_image','user_'.$boosters_id);
+
+                $plist=[
+                    'booster_paypal'=>'Paypal',
+                    'booster_usdt_trc20'=>'USDT TRC20',
+                    'booster_wiseemail'=>'Wise',
+                ];
+
+                $payment_method=get_post_meta($item->ID, 'payment_method', true);
+                $pmo='';
+                foreach($plist as $kp=>$nm)
+                {
+                    $koshel = get_field($kp,'user_' . $boosters_id);
+                    if ($payment_method==$koshel)
+                    {
+                        $pmo=$nm;
+                        break;
+                    }
+                }
+
+                $return_list[]=[
+                    'ID'=>$item->ID,
+                    'booster'=>[
+                        'boosters_id'=>$boosters_id,
+                        'first_name'=>$user_info->first_name,
+                        'last_name'=>$user_info->last_name,
+                        'custom_profile_image'=>$custom_profile_image?$custom_profile_image:plugins_url().'/gladiator_dashboard/img/no_avatar.png',
+                    ],
+                    'summ'=>get_post_meta($item->ID, 'summ', true),
+                    'payment_method'=>$payment_method,
+                    'pmo'=>$pmo,
+                    'status'=>get_post_meta($item->ID, 'status', true),
+                ];
+            }
+        }
+
+        return [
+            'lists'=>$return_list,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+
+    /**
+     * Get list withdrawal for booster
+     *
+     * @return array
+     */
+    public function get_list_booster($paged=1)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        $args = array(
+            'posts_per_page' => -1,
+            'paged' => $paged,
+            'post_type' => $this->post_type,
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'boosters_id',
+                    'value' => $user_id,
+                    'compare' => '=',
+                ),
+            ),
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+            ),
+        );
+
+        $query = new WP_Query($args);
+        $total_pages = $query->max_num_pages;
+        $withdrawal = $query->posts;
+        $return_list=[];
+        if (is_array($withdrawal) && count($withdrawal))
+        {
+            foreach ($withdrawal as $key => $item)
+            {
+                $boosters_id = get_post_meta($item->ID, 'boosters_id', true);
+                $user_info = get_userdata($boosters_id);
+                $custom_profile_image = get_field('custom_profile_image','user_'.$boosters_id);
+
+                $return_list[]=[
+                    'ID'=>$item->ID,
+                    'date'=>$item->post_date,
+                    'booster'=>[
+                        'boosters_id'=>$boosters_id,
+                        'first_name'=>$user_info->first_name,
+                        'last_name'=>$user_info->last_name,
+                        'custom_profile_image'=>$custom_profile_image?$custom_profile_image:plugins_url().'/gladiator_dashboard/img/no_avatar.png',
+                    ],
+                    'summ'=>get_post_meta($item->ID, 'summ', true),
+                    'payment_method'=>get_post_meta($item->ID, 'payment_method', true),
+                    'status'=>get_post_meta($item->ID, 'status', true),
+                ];
+            }
+        }
+
+        return [
+            'lists'=>$return_list,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+}
+
+class booster_orders
+{
+    private $order_options=[];
+    public $filter_request=[];
+    private $booster_applicants_id=[];
+    private $Boosters_Applicant_Instance;
+    private $post_type = 'shop_order';
+
+    public function __construct($order_options=[],$Boosters_Applicant_Instance) {
+        $this->Boosters_Applicant_Instance = $Boosters_Applicant_Instance;
+        $this->order_options = $order_options;
+    }
+
+    /**
+     * Filter order list for booster
+     *
+     * @param int $paged
+     * @return array
+     */
+    public function get_booster_order_list_filter($paged=1)
+    {
+        $args = array(
+            'post_type' => $this->post_type,
+            'post_status' => 'any',
+            //'paged' => $paged,
+            'posts_per_page' => 50,
+            'meta_query' => array(
+                array(
+                    'key' => $this->order_options['boosters_products_prices'],
+                    'compare' => 'EXISTS',
+                ),
+            ),
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+
+            'date_query'     => array(
+                array(
+                    'after' => '10 days ago',            // Exclude posts older than 10 days
+                ),
+            ),
+        );
+
+        $query = new WP_Query($args);
+        $orders = $query->posts;
+        $total_pages = $query->max_num_pages;
+
+        $current_user = wp_get_current_user();
+        $booster_subscribe_categorys=[];
+        if ($current_user)
+        {
+            $user_id = $current_user->ID;
+            $booster_subscribe_categorys = get_field('booster_subscribe_categorys', 'user_' . $user_id);
+        }
+        $result_subs = false;
+
+        // Process the retrieved orders products
+        $order_products = [];
+
+        foreach ($orders as $order) {
+            $order_id = $order->ID;
+
+            $in_work_status =$this->Boosters_Applicant_Instance->get_applicants_work_status_by_order_id($order_id);
+            $in_complected_status =$this->Boosters_Applicant_Instance->get_applicants_complected_status_by_order_id($order_id);
+            $in_confirmed_admin_status =$this->Boosters_Applicant_Instance->get_applicants_confirmed_admin_by_order_id($order_id);
+            if ($in_work_status || $in_complected_status || $in_confirmed_admin_status) continue;
+
+            // if ( $in_complected_status || $in_confirmed_admin_status) continue;
+
+
+            $boosters_products_prices_time = get_post_meta($order_id, 'boosters_products_prices_time', true);
+            if ( $boosters_products_prices_time && $this->isDateLessThan7DaysAgo($boosters_products_prices_time) )
+                continue;
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+            $order_info_add=[];
+            foreach ($additional_fields as $field_key => $field_values) {
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 && strpos($field_key, 'Payer') !==0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            $items = $order->get_items();
+            $created_date = $order->get_date_created();
+
+
+            $boosters_products_prices = get_post_meta($order_id,$this->order_options['boosters_products_prices'],1);
+
+            foreach ($items as $item) {
+                $product_id = $item->get_product_id();
+
+                $variation_id = $item->get_variation_id();
+
+                //--------------- SUBS CATEGORY -------
+                $prod_terms = wp_get_post_terms($product_id, 'product_cat', array('fields' => 'ids'));
+
+                if ($prod_terms)
+                {
+                    $result_subs = !empty(array_intersect($prod_terms, $booster_subscribe_categorys));
+                }
+
+                if (!$result_subs) continue;
+                //--------------- /SUBS CATEGORY ------
+
+                $product = wc_get_product($product_id);
+
+                if ( !$product ) {
+                    continue;
+                }
+
+                $product_name = $product->get_name();
+                //$product_price = $product->get_price();
+                //$product_sku = $product->get_sku();
+
+                if ($variation_id) {
+                    $variation_product = wc_get_product($variation_id);
+                    $attributes = $variation_product->get_variation_attributes();
+                    if (isset($attributes['attribute_region'])) {
+                        $region = $attributes['attribute_region'];
+                    }
+                }
+
+                $boosters_products_prices_ = isset($boosters_products_prices[$product_id])?$boosters_products_prices[$product_id]:0;
+
+                $is_out = true;
+
+                if (is_array($this->filter_request) && count($this->filter_request))
+                {
+                    foreach ($this->filter_request as $fkey => $fitem)
+                    {
+                        switch ($fkey)
+                        {
+                            case 'order_id':
+                                if ( $fitem!="" ) {
+                                    $is_out = $this->filter_logic($fkey, strtolower($order_id));
+                                }
+                                break;
+                            case 'region':
+                                if ( $fitem!="" ) {
+                                    $is_out = $this->filter_logic($fkey, strtolower($region));
+                                }
+                                break;
+                            default:
+                                $is_out = true;
+                                break;
+                        }
+                    }
+                }
+
+
+                if ( $boosters_products_prices_>0 && $is_out )
+                {
+                    $is_applicants = $this->cheack_is_applicants($order_id,$product_id);
+                    $applicants_info = $this->Boosters_Applicant_Instance->get_status($order_id,$product_id);
+
+                    $order_products[] = [
+                        'id' => $product_id,
+                        'order_id' => $order_id,
+                        'product_name' => $product_name,
+                        // 'product_price'=>$product_price,
+                        'region' => $region,
+                        'meta' => $item->get_formatted_meta_data(),
+                        'boosters_products_prices' => $boosters_products_prices_,
+                        // 'order_info_add' => $order_info_add,
+                        'is_applicants'=>$is_applicants,
+                        'booster_applicants_id'=>$is_applicants?$this->booster_applicants_id[$order_id][$product_id]->ID:0,
+                        'applicants_info'=>$applicants_info,
+                        'order_created_date'=>$created_date,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+    private function cheack_is_applicants($order_id=0,$product_id=0)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        $args = array(
+            'post_type' => 'booster_applicant',
+            'post_status' => 'any',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' => 'product_id',
+                    'value' => $product_id,
+                    'compare' => '=',
+                ),
+                array(
+                    'key' => 'order_id',
+                    'value' => $order_id,
+                    'compare' => '=',
+                ),
+                array(
+                    'key' => 'boosters_id',
+                    'value' => $user_id,
+                    'compare' => '=',
+                ),
+            ),
+        );
+
+        $query = new WP_Query($args);
+
+        if ( count($query->posts) ) {
+            foreach ($query->posts as $post)
+            {
+                $this->booster_applicants_id[$order_id][$product_id]=$post;
+            }
+
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Get order list for booster, out only if set admin price
+     *
+     * @param int $paged
+     * @return array
+     */
+    public function get_booster_order_list($paged=1)
+    {
+        $args = array(
+            'post_type' => $this->post_type,
+            'post_status' => 'any',
+            //'paged' => $paged,
+            'posts_per_page' => 50,
+            'meta_query' => array(
+                array(
+                    'key' => $this->order_options['boosters_products_prices'],
+                    'compare' => 'EXISTS',
+                ),
+            ),
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+            // 'fields'         => 'ids',
+            'date_query'     => array(
+                array(
+                    // 'after'     => '1 month ago',     // Exclude posts older than 1 month
+                    'after'     => '10 days ago',     // Exclude posts older than 1 month
+                ),
+            ),
+        );
+
+        $query = new WP_Query($args);
+
+        $orders = $query->posts;
+        $total_pages = $query->max_num_pages;
+
+        $current_user = wp_get_current_user();
+        $booster_subscribe_categorys=[];
+        if ($current_user)
+        {
+            $user_id = $current_user->ID;
+            $booster_subscribe_categorys = get_field('booster_subscribe_categorys', 'user_' . $user_id);
+        }
+        $result_subs = false;
+
+        // Process the retrieved orders products
+        $order_products = [];
+
+
+
+        foreach ($orders as $order)
+        {
+            $order_id = $order->ID;
+
+
+            $in_work_status =$this->Boosters_Applicant_Instance->get_applicants_work_status_by_order_id($order_id);
+            $in_complected_status =$this->Boosters_Applicant_Instance->get_applicants_complected_status_by_order_id($order_id);
+            $in_confirmed_admin_status =$this->Boosters_Applicant_Instance->get_applicants_confirmed_admin_by_order_id($order_id);
+
+            if ($in_work_status || $in_complected_status || $in_confirmed_admin_status) continue;
+            //if ( $in_complected_status || $in_confirmed_admin_status) continue;
+
+
+            $boosters_products_prices_time = get_post_meta($order_id, 'boosters_products_prices_time', true);
+            if ( $boosters_products_prices_time && $this->isDateLessThan7DaysAgo($boosters_products_prices_time) )
+                continue;
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+            $order_info_add=[];
+            foreach ($additional_fields as $field_key => $field_values) {
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 && strpos($field_key, 'Payer') !==0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            $items = $order->get_items();
+            $created_date = $order->get_date_created();
+
+
+            $boosters_products_prices = get_post_meta($order_id,$this->order_options['boosters_products_prices'],1);
+
+            foreach ($items as $item)
+            {
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+
+                //--------------- SUBS CATEGORY -------
+                $prod_terms = wp_get_post_terms($product_id, 'product_cat', array('fields' => 'ids'));
+                if ($prod_terms)
+                {
+                    $result_subs = !empty(array_intersect($prod_terms, $booster_subscribe_categorys));
+                }
+                if (!$result_subs) continue;
+                //--------------- /SUBS CATEGORY ------
+
+                $product = wc_get_product($product_id);
+
+                if ( !$product ) {
+                    continue;
+                }
+
+                $product_name = $product->get_name();
+                // $product_price = $product->get_price();
+                // $product_sku = $product->get_sku();
+
+                if ($variation_id) {
+                    $variation_product = wc_get_product($variation_id);
+                    if ( !$variation_product ) {
+                        continue;
+                    }
+
+                    $attributes = $variation_product->get_variation_attributes();
+                    if (isset($attributes['attribute_region'])) {
+                        $region = $attributes['attribute_region'];
+                    }
+                }
+
+                $boosters_products_prices_ = isset($boosters_products_prices[$product_id])?$boosters_products_prices[$product_id]:0;
+                if ( $boosters_products_prices_>0 )
+                {
+                    $formatted_meta_data = $item->get_formatted_meta_data();
+
+                    $region='';
+                    if ($variation_id) {
+                        $variation_product = wc_get_product($variation_id);
+                        $attributes = $variation_product->get_variation_attributes();
+                        if (isset($attributes['attribute_region'])) {
+                            $region = $attributes['attribute_region'];
+                            //unset($attributes['attribute_region']);
+                        }
+
+                        if ( count($attributes) )
+                        {
+                            $product_attributes = $item->get_product()->get_attributes();
+                            foreach ( $product_attributes as $attribute_name => $attribute )
+                            {
+                                if ($attribute_name=='region') {
+                                    if (trim($region)=="")
+                                        $region = $attribute;
+                                    continue;
+                                }
+                                $attribute_label = wc_attribute_label( $attribute_name );
+                                $formatted_attribute_label = ucfirst( $attribute_label );
+                                $formatted_meta_data[]=[
+                                    'display_key'=>$formatted_attribute_label,
+                                    'value'=>$attribute,
+                                ];
+                            }
+                        }
+                    }
+
+                    $is_applicants = $this->cheack_is_applicants($order_id,$product_id);
+                    $applicants_info = $this->Boosters_Applicant_Instance->get_status($order_id,$product_id);
+
+                    $order_products[] = [
+                        'id' => $product_id,
+                        'order_id' => $order_id,
+                        'product_name' => $product_name,
+                        'region' => $region,
+                        'meta' => $formatted_meta_data,
+                        'boosters_products_prices' => $boosters_products_prices_,
+                        'is_applicants'=>$is_applicants,
+                        'booster_applicants_id'=>$is_applicants?$this->booster_applicants_id[$order_id][$product_id]->ID:0,
+                        'applicants_info'=>$applicants_info,
+                        'in_complected_status'=>$in_complected_status,
+                        'in_work_status'=>$in_work_status,
+                        'in_confirmed_admin_status'=>$in_confirmed_admin_status,
+                        'boosters_products_prices_time'=>$boosters_products_prices_time,
+                        'created_date'=>$created_date,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+
+    public function isDateLessThan7DaysAgo($dateTimestamp)
+    {
+        $currentTimestamp = time();
+        $sevenDaysAgoTimestamp = strtotime('-7 days', $currentTimestamp);
+        if ($dateTimestamp < $sevenDaysAgoTimestamp) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Filter logic
+     *
+     * @param string $variable_name
+     * @param string $value
+     * @return bool
+     */
+    private function filter_logic($variable_name='',$value='')
+    {
+        if (is_array($this->filter_request) && count($this->filter_request))
+        {
+            $value = strip_tags($value);
+            $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            $value = mb_substr($value,0,24,'UTF-8');
+            $value = trim($value);
+            $value = strtolower($value);
+
+            if ( isset($this->filter_request[$variable_name]) )
+            {
+                $filter_request_variable = strtolower($this->filter_request[$variable_name]);
+                if (
+                    $filter_request_variable != "" &&
+                    $value != "" &&
+                    $filter_request_variable === $value
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Booster get order - My Orders
+     */
+    public function get_booster_order_list_worked($paged=1)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        if ( !current_user_can('boosters') )
+        {
+            return [];
+        }
+
+        $args = array(
+            'post_type' => 'booster_applicant',
+            'post_status' => 'any',
+            //'paged' => $paged,
+            'posts_per_page' => -1,
+
+            'meta_query' => array(
+                'relation'=>'AND',
+                array(
+                    'key' => 'boosters_id',
+                    'value' => $user_id,
+                    'compare' => '=',
+                    'type' => 'NUMERIC',
+                ),
+                array(
+                    'key' => 'booster_status',
+                    'value' => 2,
+                    'compare' => '=',
+                    'type' => 'NUMERIC',
+                ),
+            ),
+
+            'orderby' => array(
+                'date' => 'DESC',       // Sort by creation date in descending order
+                'meta_value_num' => 'DESC'  // Sort by order total in descending order
+            ),
+        );
+
+        $query = new WP_Query($args);
+
+        $orders = $query->posts;
+        $total_pages = $query->max_num_pages;
+
+        // Process the retrieved orders products
+        $order_products = [];
+
+        foreach ($orders as $booster_applicant_info) {
+
+            $order_id = get_post_meta($booster_applicant_info->ID, 'order_id', true);
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+            $order_info_add = [];
+            foreach ($additional_fields as $field_key => $field_values) {
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 &&
+                    strpos($field_key, 'Payer') !== 0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            if ($order)
+            {
+                $items = $order->get_items();
+                $boosters_products_prices = get_post_meta($order_id, $this->order_options['boosters_products_prices'], 1);
+
+                foreach ($items as $item) {
+                    $product_id = $item->get_product_id();
+                    $variation_id = $item->get_variation_id();
+
+                    $product = wc_get_product($product_id);
+
+                    if ( !$product ) {
+                        continue;
+                    }
+
+                    $product_name = $product->get_name();
+                    //$product_price = $product->get_price();
+                    //$product_sku = $product->get_sku();
+
+                    if ($variation_id) {
+                        $variation_product = wc_get_product($variation_id);
+                        $attributes = $variation_product->get_variation_attributes();
+                        if (isset($attributes['attribute_region'])) {
+                            $region = $attributes['attribute_region'];
+                        }
+                    }
+
+                    $boosters_products_prices =
+                        isset($boosters_products_prices[$product_id]) ? $boosters_products_prices[$product_id] : 0;
+
+                    if ($boosters_products_prices > 0) {
+
+                        $is_applicants = $this->cheack_is_applicants($order_id, $product_id);
+                       // $applicants_info = $this->Boosters_Applicant_Instance->get_status($order_id, $product_id);
+                        $booster_status = (int)get_post_meta($booster_applicant_info->ID, 'booster_status', true);
+
+                        $applicants_info = [
+                            'booster_applicants_id' => $booster_applicant_info->ID,
+                            'boosters_id' => get_post_meta($booster_applicant_info->ID, 'boosters_id', true),
+                            'start_time' => get_post_meta($booster_applicant_info->ID, 'start_time', true),
+                            'completion_eta' => get_post_meta($booster_applicant_info->ID, 'completion_eta', true),
+                            'booster_status' => $booster_status,
+                        ];
+
+                        $order_products[] = [
+                            'id' => $product_id,
+                            'order_id' => $order_id,
+                            'product_name' => $product_name,
+                            'region' => $region,
+                            'meta' => $item->get_formatted_meta_data(),
+                            'boosters_products_prices' => $boosters_products_prices,
+                            'is_applicants' => $is_applicants,
+                            'booster_applicants_id' => $is_applicants ?
+                                $this->booster_applicants_id[$order_id][$product_id]->ID : 0,
+                            'applicants_info' => $applicants_info,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+}
+
+class booster_subscribe_category
+{
+    private $save_subscribe_category_field='booster_subscribe_categorys';
+    private $booster_subscribe_category=[];
+
+    public function __construct() {
+
+    }
+
+    /**
+     * Get subscribe category
+     *
+     * @return array
+     */
+    public function get_subscribe_category()
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        if ($user_id>0) {
+            return get_field($this->save_subscribe_category_field,'user_'.$user_id);
+        }
+
+        return [];
+    }
+
+    public function get_users__subscribe_categorys()
+    {
+        $args = array(
+            'meta_query' => array(
+                array(
+                    'key'     => $this->save_subscribe_category_field,
+                    'compare' => 'EXISTS',
+                ),
+            ),
+        );
+
+        $users = get_users($args);
+
+        $rusers=[];
+        foreach ($users as $user) {
+            $rusers[$user->ID]=get_field($this->save_subscribe_category_field,'user_'.$user->ID);
+        }
+
+        return $rusers;
+    }
+
+    /**
+     * @param array $list_category
+     * @return bool
+     */
+    public function save_subscribe_category($list_category=[])
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        if ($user_id>0) {
+            return update_field($this->save_subscribe_category_field, $list_category, 'user_' . $user_id);
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Get list category
+     *
+     * @return string
+     */
+    public function list_cat()
+    {
+        $terms = get_terms(array(
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+        ));
+
+        $root_terms = array_filter($terms, function($term) use ($terms) {
+            return $term->parent == 0;
+        });
+
+        $this->booster_subscribe_category = $this->get_subscribe_category();
+
+        $html = '<ul class="subscribe_list" >';
+
+        foreach ($root_terms as $term) {
+            $html .= $this->recursive_term_tree($term, $terms);
+        }
+
+        $html .= '</ul>';
+
+        return $html;
+    }
+
+    /**
+     * Tree recursive product category
+     *
+     * @param $parent_term
+     * @param $all_terms
+     * @return string
+     */
+    private function recursive_term_tree($parent_term, $all_terms)
+    {
+        $term_id = $parent_term->term_id;
+        $children = get_terms(array(
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+            'parent'     => $term_id,
+        ));
+
+        $has_children = !empty($children);
+
+        $ch='';
+
+        if ( in_array($term_id,$this->booster_subscribe_category)) $ch='checked="true" ';
+
+        $html = '<li>' . "<input v-model='subscribe_category' $ch  type='checkbox' value='$term_id' id=\"catid_$term_id\" > <label for=\"catid_$term_id\" >$parent_term->name</label>";
+
+        if ($has_children) {
+            $html .= '<ul>';
+            foreach ($children as $child_term) {
+                $html .= $this->recursive_term_tree($child_term, $all_terms);
+            }
+            $html .= '</ul>';
+        }
+
+        $html .= '</li>';
+
+        return $html;
+    }
+}
+
+class customer_panel
+{
+    private $allowedMimeTypes_list = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+        'png'  => 'image/png',
+        'bmp'  => 'image/bmp',
+        'webp' => 'image/webp',
+        'tiff' => 'image/tiff',
+        'ico'  => 'image/x-icon',
+        'svg'  => 'image/svg+xml',
+    ];
+    private $maxFileSize = 10 * 1024 * 1024; //10 MB
+
+    public function __construct() {
+
+    }
+
+    public function save_profile()
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+
+        if ($user_id) {
+            $upd_fields1 = [
+                'account_discort_tag',
+                'account_tel',
+                'chats_user_name',
+                'first_name',
+                'last_name',
+                'account_tel',
+                'account_discort_tag',
+            ];
+
+            if (isset($_POST) && is_array($_POST) && count($_POST)) {
+                foreach ($_POST as $key => $item) {
+                    if (in_array($key, $upd_fields1)) {
+                        $value = sanitize_text_field($item);
+                        $updated = update_user_meta($user_id, $key, $value);
+                    }
+                }
+
+                $updated = update_user_meta($user_id, 'billing_email', sanitize_text_field($_POST['email']));
+                $updated = update_user_meta($user_id, 'billing_first_name', sanitize_text_field($_POST['first_name']));
+                $updated = update_user_meta($user_id, 'billing_last_name', sanitize_text_field($_POST['last_name']));
+                $updated = update_user_meta($user_id, 'billing_phone', sanitize_text_field($_POST['account_tel']));
+                $updated = update_user_meta($user_id, 'shipping_phone', sanitize_text_field($_POST['account_tel']));
+                $updated = update_user_meta($user_id, 'shipping_first_name', sanitize_text_field($_POST['first_name']));
+                $updated = update_user_meta($user_id, 'shipping_last_name', sanitize_text_field($_POST['last_name']));
+
+                $args = array(
+                    'ID' => $user_id,
+                    'user_email' => esc_attr($_POST['email'])
+                );
+                wp_update_user($args);
+            }
+
+            $file = $_FILES;
+            if (isset($file['file']) && $file['file']['error']==0)
+            {
+                $extensions_array = ['jpg', 'jpeg', 'gif', 'png'];
+                $allowedMimeTypes = [];
+                foreach ($extensions_array as $k => $v) {
+                    if (isset($this->allowedMimeTypes_list[$v]))
+                        $allowedMimeTypes[] = $this->allowedMimeTypes_list[$v];
+                }
+
+                if (in_array($file['file']['type'], $allowedMimeTypes) && $file['file']['size'] <= $this->maxFileSize) {
+                    $upload_dir = wp_upload_dir();
+                    $uploadedFile = $upload_dir['basedir'].'/' . $file['file']['name'];
+                    if (move_uploaded_file($file['file']['tmp_name'], $uploadedFile))
+                    {
+                        $attachment = array(
+                            'post_mime_type' => $file['file']['type'],
+                            'post_title' => sanitize_file_name($file['file']['name']),
+                            'post_content' => '',
+                            'post_status' => 'inherit'
+                        );
+                        $attach_id = wp_insert_attachment($attachment, $uploadedFile);
+                        $attach_data = wp_generate_attachment_metadata($attach_id, $uploadedFile);
+                        wp_update_attachment_metadata($attach_id, $attach_data);
+                        $attachment_url = wp_get_attachment_url($attach_id);
+
+                        $updated = update_user_meta($user_id, 'avatar', $attachment_url);
+                    }
+                }
+            }
+        }
+    }
+
+    public function get_orders($paged=1)
+    {
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+        $user_email = $current_user->user_email;
+
+        // Call WooCommerce function to retrieve completed orders
+        $args = array(
+            'posts_per_page' => 10,
+            'paged' => $paged,
+            'post_type' => 'shop_order',
+            'post_status' => 'any',
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key' => '_customer_user',
+                    'value' => $user_id,
+                ),
+                array(
+                    'key' => '_billing_email',
+                    'value' => $user_email,
+                    'compare' => 'LIKE',
+                ),
+            ),
+            'orderby' => 'date',
+            'order' => 'desc',
+        );
+
+        $orders_query = new WP_Query($args);
+
+        $orders = $orders_query->posts;
+        $total_pages = $orders_query->max_num_pages;
+
+        $order_products = [];
+
+        foreach ($orders as $order) {
+            $order_id = $order->ID;
+
+            // Get additional fields of the order
+            $additional_fields = get_post_custom($order_id);
+
+
+            $order_info_add=[];
+            foreach ($additional_fields as $field_key => $field_values) {
+                // Exclude fields starting with '_customer...' or '_billing...'
+                if (strpos($field_key, '_customer') !== 0 && strpos($field_key, '_billing') !== 0 && strpos($field_key, 'Payer') !==0) {
+                    $order_info_add[$field_key] = $field_values[0];
+                }
+            }
+
+            //----------------------------------------------
+
+            // Get the first product in the order
+            $order = wc_get_order($order_id);
+            $items = $order->get_items();
+            $order_status = $order->get_status();
+
+            foreach ($items as $item) {
+                $product_id = $item->get_product_id();
+                $variation_id = $item->get_variation_id();
+
+                $product = wc_get_product($product_id);
+
+                if ( !$product ) {
+                    continue;
+                }
+
+                $product_name = $product->get_name();
+                $product_price = $product->get_price();
+                $product_sku = $product->get_sku();
+
+                if ($variation_id) {
+                    $variation_product = wc_get_product($variation_id);
+                    $attributes = $variation_product->get_variation_attributes();
+                    if (isset($attributes['attribute_region'])) {
+                        $region = $attributes['attribute_region'];
+                    }
+                }
+
+                $order_products[]=[
+                    'id'=>$product_id,
+                    'order_id'=>$order_id,
+                    'product_name'=>$product_name,
+                    'product_price'=>$product_price,
+                    'region'=>$region,
+                    'meta'=>$item->get_formatted_meta_data(),
+                    'order_info_add'=>$order_info_add,
+                    'status'=>$order_status,
+                ];
+            }
+        }
+
+        return [
+            'list_orders'=>$order_products,
+            'total_pages'=>$total_pages,
+        ];
+    }
+}
+
+
+$t = new Gladiator_Dashboard_TelegramBot();
+
+//$t->sendMessage('436209021','test message');

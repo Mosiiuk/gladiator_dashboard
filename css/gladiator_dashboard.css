@@ -1,0 +1,1783 @@
+.footer, .header {
+    padding-left: 0 !important;
+}
+
+.header_aside {
+    display: none !important;
+}
+
+.header_acc .btn {
+    display: none !important;
+}
+@media (min-width: 1200px){
+    h1 {
+        font-size: 60px;
+        line-height: 1.05;
+    }
+}
+/*-----------------------------------------------*/
+
+.gladiator_dashboard {
+    margin-top: 120px;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+.gladiator_dashboard_admin_dash {
+    display: none;
+    margin-top: 120px;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+.gladiator_dashboard_tabs {
+    width: 100%;
+    height: auto;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.gladiator_dashboard_tabs ul {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.gladiator_dashboard_tabs ul li {
+    display: table-cell;
+    padding: 5px;
+    border: #098cec 1px solid;
+    text-align: center;
+}
+.gladiator_dashboard_tabs ul li a {
+    display: block;
+    width: 100%;
+}
+.gladiator_dashboard_tabs ul li.actv,
+.gladiator_dashboard_tabs ul li:hover
+{
+    background-color: #098cec;
+}
+
+/*---------- ADMIN ORDER TABLE ------------ */
+
+.list_order_table {
+    position: relative;
+    width: 100%;
+    margin: 5px;
+    border: #098cec 1px solid;
+    border-radius: 10px;
+    padding-bottom: 0;
+}
+
+.list_order_table_head {
+    display: grid;
+    width: 100%;
+    border-bottom: #098cec 1px solid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.list_order_table_head.filter {
+    border-bottom: none !important;
+    grid-template-columns: repeat(5, 1fr);
+}
+.withdrawal_list_order_table .list_order_table_head,
+.withdrawal_list_order_table .list_order_table_body_tr{
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.payment_methods_list_order_table {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+}
+.payment_methods_list_order_table .list_order_table_body_tr {
+    display: flex;
+    width: 100%;
+    border-right: 1px solid #098cec;
+}
+.payment_methods_list_order_table .list_order_table_body_tr:nth-last-child(2) {
+    border-right: none;
+}
+.payment_methods_list_order_table .list_order_table_body_tr .table_td_line{
+    width: 100%;
+}
+.payment_methods_list_order_table .list_order_table_body_tr:last-child {
+    grid-column-start: 1;
+    grid-column-end:-1;
+    text-align: center;
+}
+
+.list_order_table.filter {
+    padding-bottom: 0 !important;
+}
+.list_order_table.filter .button{
+    height: 44px;
+
+}
+
+.list_order_table_head .table_head_line {
+    padding: 10px;
+    color: #ff9900;
+}
+
+.list_order_table_body_tr {
+    display: grid;
+    width: 100%;
+    border-bottom: #098cec 1px solid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+}
+
+.my_orders .list_order_table_head{
+    grid-template-columns: repeat(5, 1fr)
+}
+.my_orders .list_order_table_body_tr{
+    grid-template-columns: repeat(5, 1fr)
+}
+
+.list_order_table_body_tr .table_td_line {
+    display: block;
+    padding: 10px;
+}
+.list_order_table .list_order_table_body_tr:last-child{
+    border-bottom: none;
+}
+.dividtr {
+    border-bottom: #098cec 1px solid;
+}
+
+.product_params {
+    font-size: 12px;
+}
+
+.product_params li {
+    padding-left: 10px;
+}
+
+.input_price_order:disabled {
+    background-color: #cbd0d8 !important;
+}
+
+/*--LOAD MORE--*/
+
+.load_more_block {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
+.dashboard_button {
+    background-color: #098cec;
+    color: #ffffff;
+}
+
+/*----------- POPAP Booster ---*/
+
+#booster_popap {
+    display: none;
+    width: 800px;
+    height: auto;
+    background-color: #0b071e;
+    padding: 15px;
+    border: #098cec 1px solid;
+    border-radius: 10px;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+
+    -webkit-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    -moz-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+}
+
+.cl_close_booster_popap {
+    float: right;
+    width: 100%;
+    text-align: right;
+    border-bottom: #098cec 1px solid;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.list_boosters {
+    width: 100%;
+    text-align: left;
+    margin-top: 40px;
+}
+
+.booster_item {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.booster_item span {
+    position: relative;
+    margin-left: 5px;
+}
+
+.booster_item span::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: #098cec;
+}
+
+.chooise_applicants {
+    margin-left: 10px;
+}
+
+/*------------- BOOSTER PANEL ----------------*/
+#booster_left_menu {
+    width: 15%;
+    height: auto;
+}
+
+#booster_left_menu ul li {
+    margin-bottom: 10px;
+    line-height: 14pt;
+}
+
+.booster_dashboard_container {
+    position: relative;
+    width: 80%;
+    height: auto;
+}
+
+.booster_dashboard_container_top {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+.withdrawal_payment_method_list{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+.withdrawal_payment_method_list li{
+    width: calc((100% / 3) - 15px);
+}
+.withdraw_fields_list {
+    display: flex;
+    width: 100%;
+    gap: 15px;
+}
+
+.withdraw_fields_list li {
+    width: calc((100% / 3) - 15px);
+}
+.withdraw_fields_list li input {
+    display: none;
+}
+.withdraw_fields_list li label {
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 0;
+}
+.withdraw_fields_list li label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #007fff;
+}
+
+.withdraw_fields_list li label:after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.withdraw_fields_list li input:checked + label{
+    color: #007fff
+}
+.withdraw_fields_list li input:checked + label:after{
+    background-color: #007fff;
+}
+
+
+.admin_dashboard_container_top {
+    position: absolute;
+    width: 97px;
+    height: auto;
+    z-index: 9999;
+    top: 10%;
+    right: 5%;
+}
+
+.booster_dashboard_title {
+    position: relative;
+    width: 50%;
+    height: auto;
+}
+
+.booster_dashboard_top_icons {
+    position: relative;
+    width: 50%;
+    height: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+.booster_dashboard_notifications,
+.booster_dashboard_balance,
+.booster_dashboard_balance,
+.booster_dashboard_name {
+    position: relative;
+    margin: 5px;
+}
+
+.booster_dashboard_notifications {
+    cursor: pointer;
+}
+
+.booster_dashboard_notifications_icon {
+    position: relative;
+    float: left;
+    width: 32px;
+    height: 32px;
+    background-image: url("../img/noti.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.booster_panel_container {
+    margin-top: 100px;
+    width: 100%;
+    position: relative;
+    display: flex;
+    padding-inline: 15px;
+    align-items: flex-start;
+}
+
+.booster_dashboard_notifications_text_container {
+    position: relative;
+    float: left;
+    height: 32px;
+    width: 100px;
+}
+
+.booster_dashboard_notifications_text {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+    margin-top: -5px;
+}
+
+.booster_dashboard_notifications_value {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
+.booster_dashboard_balance_icon {
+    position: relative;
+    float: left;
+    width: 32px;
+    height: 32px;
+    background-image: url("../img/blnc.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.booster_dashboard_balance_text_container {
+    position: relative;
+    float: left;
+    height: 32px;
+    width: 100px;
+}
+
+.booster_dashboard_balance_text {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+    margin-top: -5px;
+}
+
+.booster_dashboard_balance_value {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
+.booster_dashboard_name_icon {
+    position: relative;
+    float: left;
+    width: 32px;
+    height: 32px;
+    background-image: url("../img/hello.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.booster_dashboard_name_text_container {
+    position: relative;
+    float: left;
+    height: 32px;
+    width: 100px;
+}
+
+.booster_dashboard_name_text {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+    margin-top: -5px;
+}
+
+.booster_dashboard_name_value {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
+.booster_dashboard_container_blocks {
+    position: relative;
+    height: auto;
+    margin-top: 20px;
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: auto;
+    gap: 30px;
+}
+
+.booster_dashboard_info_block,
+.booster_dashboard_info_balance_block,
+.booster_dashboard_info_notification_block {
+    position: relative;
+    height: auto;
+}
+
+.booster_dashboard_info_block,
+.booster_dashboard_info_balance_block {
+    width: 24%;
+}
+.booster_dashboard_info_notification_title {
+    justify-content: center;
+    display: flex;
+}
+.booster_dashboard_info_balance {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.booster_dashboard_info_balance h5{
+    margin-bottom: 0;
+}
+.booster_dashboard_legal h2{
+    text-align: left;
+    color: #fff;
+}
+
+.booster_dashboard_legal a{
+    color: #007fff;
+    text-decoration: underline;
+}
+.booster_dashboard_info_notification_block {
+    width: 47%;
+}
+
+#booster_left_menu ul li.actv a {
+    color: #098cec !important;
+}
+
+#booster_left_menu ul {
+    display: block;
+    width: 80%;
+    margin: 10px;
+    line-height: 32pt;
+}
+
+
+.style_rectangle {
+    border: #098cec 1px solid;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 200px;
+    -webkit-box-shadow: 0 0 12px 0 #098CEC;
+    box-shadow: 0 0 12px 0 #098CEC;
+}
+
+.want_btn {
+    background-color: #75bb05 !important;
+    color: #FFF !important;
+}
+
+.chat_btn {
+    background-color: #45595a !important;
+    color: #FFF !important;
+}
+
+/*---------------- WANT ORDER POPAP ----------------*/
+
+#booster_want_order_popap {
+    display: none;
+    width: 800px;
+    max-width: 95%;
+    height: auto;
+    background-color: #0b071e;
+    padding: 15px;
+    border: #098cec 1px solid;
+    border-radius: 10px;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+
+    -webkit-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    -moz-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+}
+
+.cl_close_booster_popap {
+    float: right;
+    width: 100%;
+    text-align: right;
+    border-bottom: #098cec 1px solid;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.want_order_container {
+    width: 100%;
+    text-align: left;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.order_info {
+    position: relative;
+}
+
+.order_want_action {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.want_cancel_btn {
+    background-color: #b42328 !important;
+}
+.want_btn.button,
+.want_cancel_btn.button {
+    border-bottom: none;
+    border: 1px solid transparent;
+}
+.set_order_completed {
+    background-color: #098cec !important;
+}
+
+.want_btn.button:hover,
+.want_cancel_btn.button:hover{
+    background-color: transparent !important;
+}
+.want_btn.button:hover {
+    border-color: #2d9203;
+}
+
+.order_want_action.button:hover{
+    border-color: #b42328;
+}
+.payment_fields {
+    width: 500px;
+}
+
+/*---------------- WITHDRAW BOOSTER POPAP ----------------*/
+
+#booster_popap_withdraw {
+    display: none;
+    width: 800px;
+    height: auto;
+    background-color: #0b071e;
+    padding: 15px;
+    border: #098cec 1px solid;
+    border-radius: 10px;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+
+    -webkit-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    -moz-box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+    box-shadow: -1px -1px 14px 2px rgba(9, 140, 236, 1);
+}
+
+.cl_close_booster_popap {
+    float: right;
+    width: 100%;
+    text-align: right;
+    border-bottom: #098cec 1px solid;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.withdraw_container {
+    width: 100%;
+    text-align: left;
+    margin-top: 40px;
+}
+
+.withdraw_fields {
+    position: relative;
+    float: left;
+    width: 100%;
+}
+
+.order_want_action {
+    position: relative;
+}
+
+.withdrawal_status {
+    width: 100px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.withdrawal_status_new {
+    background-color: #509c7b;
+}
+
+.withdrawal_status_execute {
+    background-color: #2d9203;
+}
+
+.withdrawal_delete {
+    background-color: #b11212;
+}
+
+/*-------booster_subscribe-------*/
+.booster_subscribe_order_container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 15px;
+}
+
+.booster_subscribe_order_container ul {
+    padding-left: 15px;
+}
+.subscribe_list {
+    column-count: 4;
+    column-gap: 20px;
+    break-inside: avoid;
+    margin-bottom: 50px;
+}
+.subscribe_list > li {
+    break-inside: avoid-column;
+    margin-bottom: 30px;
+    border: 1px solid #007fff;
+    padding: 20px;
+    border-radius: 6px;
+}
+.subscribe_list > li label{
+    font-size: 18px;
+}
+.subscribe_list label {
+    position: relative;
+    padding-left: 33px;
+    cursor: pointer;
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.subscribe_list input {
+    display: none;
+}
+.subscribe_list label:after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 1px solid #fff;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    position: absolute;
+    top: 0;
+    left: 0
+}
+
+.subscribe_list label:before {
+    content: "";
+    width: 14px;
+    height: 7px;
+    z-index: 5;
+    border-bottom: 2px solid #fff;
+    border-left: 2px solid #fff;
+    position: absolute;
+    top: 9px;
+    left: 12px;
+    -webkit-transform: translate(-50%,-50%) rotate(-45deg);
+    -ms-transform: translate(-50%,-50%) rotate(-45deg);
+    transform: translate(-50%,-50%) rotate(-45deg);
+    -webkit-transition: .2s;
+    -o-transition: .2s;
+    transition: .2s;
+    opacity: 0
+}
+
+.subscribe_list input:checked + label:after {
+    background-color: #098cec;
+    border: 1px solid #098cec
+}
+
+.subscribe_list input:checked + label:before {
+    opacity: 1;
+    z-index: 5;
+}
+
+
+/*----------- CUSTOMER PANEL -----*/
+.order_status {
+    padding: 5px 10px;
+    display: block;
+    text-align: center;
+    width: fit-content;
+    border-radius: 6px;
+}
+
+.on_hold {
+    background-color: #509c7b;
+}
+
+.completed {
+    background-color: #2bb305;
+}
+
+.cancelled {
+    background-color: #525c63;
+}
+
+.processing {
+    background-color: #c47734;
+}
+
+.pending {
+    background-color: #efd10b;
+}
+
+.customer_fields {
+    width: 400px;
+}
+
+/*---------- Booster Customer Chat ---*/
+
+.booster_dashboard_chat {
+    width: 100%;
+    float: left;
+}
+
+.list_chats {
+    float: left;
+    width: 22%;
+    padding: 1%;
+    margin: 1%;
+    margin-right: 0;
+    border: #098cec 1px solid;
+    border-radius: 6px;
+}
+.list_chats p {
+    font-weight: 700;
+    font-size: 16px;
+}
+.list_chats ul {
+    display: block;
+    float: left;
+}
+
+.list_chats ul li {
+    display: block;
+    float: left;
+    border: #098cec 1px solid;
+    border-radius: 6px;
+    background-color: #394148 !important;
+    padding: 5px !important;
+    margin-bottom: 5px !important;
+}
+
+.list_chats ul li.active, .list_chats ul li.active ul.product_params li {
+    background-color: #098cec42 !important;
+    border: #929aaa 1px solid;
+}
+
+.list_chats ul li ul.product_params {
+    margin-left: 5px !important;
+}
+
+.list_chats ul li ul.product_params li {
+    border: none !important;
+}
+
+.chat_container {
+    width: 75%;
+    float: left;
+    padding: 1%;
+    margin: 1%;
+    border: #098cec 1px solid;
+    border-radius: 6px;
+    color: #c8d4df;
+}
+
+.chat_container .top,
+.chat_container .content,
+.chat_container .bottom {
+    width: 100%;
+    float: left;
+    border: #098cec 1px solid;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+
+.chat_container .top {
+    min-height: 50px;
+    background-color: #098cec42;
+    border: #098cec42 1px solid;
+}
+
+.chat_info {
+    float: left;
+    width: 48%;
+    padding: 1%;
+    line-height: 27.5px;
+    font-weight: 700;
+}
+
+.chat_buttons {
+    float: left;
+    width: 50%;
+    height: 30px;
+    padding: 6px;
+    text-align: right;
+}
+
+.chat_container .content {
+    min-height: 400px;
+    /* background-color: #098cec42; */
+    padding: 5px;
+    max-height: 500px;
+    overflow-y: scroll;
+    -webkit-box-shadow: inset 0px 13px 9px -3px rgba(0, 0, 0, 0.51);
+    -moz-box-shadow: inset 0px 13px 9px -3px rgba(0, 0, 0, 0.51);
+    box-shadow: inset 0px 13px 9px -3px rgba(0, 0, 0, 0.51);
+}
+
+.chat_container .bottom {
+    min-height: 40px;
+    padding: 5px;
+}
+
+.fields_container {
+    position: relative;
+    width: 100%;
+    float: left;
+}
+
+
+.chat_field {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: flex;
+}
+
+.chat_field textarea,
+.chat_field textarea:focus,
+.chat_field textarea:focus-visible {
+    display: block;
+    width: 99%;
+    margin: 0 auto;
+    min-height: 50px;
+    background-color: #293B4B;
+    color: #c8d4df;
+    border-radius: 5px;
+    border: #5C7081 1px solid !important;
+    padding: 5px;
+    outline: none;
+}
+
+.chat_field textarea::placeholder {
+    color: #c8d4df;
+}
+
+/*.chat_field button {*/
+/*  display: block;*/
+/*  float: right;*/
+/*  box-shadow: inset 0px 1px 0px 0px #54a3f7;*/
+/*  background: linear-gradient(to bottom, #007dc1 5%, #0061a7 100%);*/
+/*  background-color: #007dc1;*/
+/*  border-radius: 3px;*/
+/*  border: 1px solid #124d77;*/
+/*  display: inline-block;*/
+/*  cursor: pointer;*/
+/*  color: #ffffff;*/
+/*  font-family: Arial;*/
+/*  font-size: 13px;*/
+/*  padding: 6px 24px;*/
+/*  text-decoration: none;*/
+/*  text-shadow: 0px 1px 0px #154682;*/
+/*  margin-right: 5px;*/
+/*}*/
+
+.chat_field button:disabled {
+    background: linear-gradient(to bottom, #6c6d6d 5%, #596872 100%);
+    color: #a4bdcf;
+}
+
+
+.chat_btn_confirm_order {
+    box-shadow: inset 0px 1px 0px 0px #007fff;
+    background: #007fff;
+    background-color: #007fff;
+    border-radius: 6px;
+    border: 1px solid #007fff;
+    display: inline-block;
+    cursor: pointer;
+    color: #fff;
+    font-size: 15px;
+    padding: 6px 24px;
+    text-decoration: none;
+    text-shadow: 0px 1px 0px #007fff;
+}
+
+.chat_msg_container {
+    float: left;
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 25px;
+    margin-top: 5px
+}
+
+.chat_message {
+    position: relative;
+    width: auto;
+    background-color: #083454;
+    border-radius: 10px;
+    max-width: 80%;
+    width: fit-content;
+}
+.user_logo img{
+    width: 20px;
+    margin-right: 5px;
+}
+.user_login{
+    font-weight: 700;
+    margin-right: 5px;
+    font-size: 14px;
+}
+.message_info {
+    font-size: 12px;
+    width: fit-content;
+    text-align: center;
+    height: 25px;
+    padding-inline: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.send_message .message_info{
+    margin-left: auto;
+}
+.message_content {
+    border: #098cec 1px solid;
+    border-radius: 12px;
+    padding: 5px 20px;
+    width: fit-content;
+    margin-top: 10px;
+}
+@media (max-width: 768px){
+    .message_content {
+        max-width: 90%;
+    }
+}
+.message_bottom {
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    margin-top: 0;
+}
+
+.message_status {
+    position: relative;
+    float: right;
+    width: 10px;
+    height: 10px;
+    border: #098cec 1px solid;
+    margin-right: 2px;
+    position: absolute;
+    right: auto;
+    left: 5px;
+    top: 8px;
+}
+.send_message .message_status{
+    left: auto;
+    right: 3px;
+    top: 6px;
+}
+.message_status.sent {
+    border-radius: 50%;
+    background-color: #0C1E2F;
+}
+
+.message_status.delivered {
+    border-radius: 50%;
+    background-color: #34c2ca;
+}
+
+.message_status.read {
+    border-radius: 50%;
+    background-color: #16BD38;
+}
+
+.send_message {
+    text-align: left;
+
+}
+.received_message .message_content{
+    /* background-color: #083454; */
+    margin-right: auto;
+    margin-left: 0;
+    border: none;
+}
+.send_message {
+    text-align: left;
+    margin-left: auto;
+    background: #098cec8a;
+}
+
+.send_message .message_content {border: none;}
+
+.admin_message {
+    text-align: left;
+    background-color: #055495;
+}
+
+.user_status {
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+    float: left;
+}
+
+.afk_line {
+    background-color: coral;
+}
+
+.off_line {
+    background-color: #ce0e0e;
+}
+
+.on_line {
+    background-color: #2b930a;
+}
+
+ul.users_chat li {
+    border: solid 1px #098cec;
+    background-color: transparent !important;
+    line-height: 9px;
+    height: auto;
+    margin: 5px;
+    width: auto;
+    display: flex;
+    align-items: center;
+}
+
+.user_avatar {
+    border-radius: 50%;
+    width: auto;
+    height: auto;
+    margin-right: 5px;
+    float: none;
+    text-align: center;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    line-height: 1.1;
+    text-align: left;
+}
+
+.user_avatar img,
+.user_logo img{
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    margin-right: 3px;
+    object-fit: cover;
+}
+
+.chat_items_delete {
+    float: right;
+    color: #FFF;
+    cursor: pointer;
+    border-radius: 50%;
+    /* background-color: red; */
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    background-color: #0b071e;
+    padding: 2px;
+    margin: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* border: 1px solid #098cec; */
+}
+.chat_items_edit svg,
+.chat_items_delete svg {
+    width: 100%;
+    height: 100%;
+}
+
+.chat_items_edit {
+    float: right;
+    background-color: #0b071e;
+    padding: 2px;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat_info {
+    font-size: 20px;
+}
+
+/*------- notification ----*/
+
+#block_notifications {
+    display: none;
+    position: absolute;
+    width: 800px;
+    height: auto;
+
+    right: 10px;
+    top: 18%;
+    border: solid 1px #098cec;
+    border-radius: 5px;
+    z-index: 9999;
+
+    background-color: #0b071e;
+}
+
+#notifications_container {
+    position: relative;
+    float: left;
+    width: 97%;
+    height: auto;
+    margin: 10px;
+}
+
+#close_notifications, #notifications_control, #list_notifications {
+    position: relative;
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
+.item_notification {
+    position: relative;
+    float: left;
+    width: 100%;
+    border: solid 1px #098cec;
+    border-radius: 5px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.notify_controll {
+    position: relative;
+    float: right;
+    color: red;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.notify_date {
+    position: relative;
+    float: left;
+    width: 70%;
+    height: 20px;
+}
+
+.notify_message {
+    position: relative;
+    float: left;
+    width: 99%;
+    height: auto;
+}
+
+#close_notifications {
+    text-align: right;
+}
+
+.item_notification.readed {
+    color: rgb(128, 128, 128);
+}
+
+#close_notifications {
+    cursor: pointer;
+}
+
+.list_chats li.in_work {
+    border-color: #93de6f;
+}
+
+.list_chats li.complected {
+    border-color: #54820b;
+}
+
+.list_chats li.admin_confirmed {
+    border-color: #4d553b;
+}
+
+.name_status {
+    font-size: 10px;
+}
+
+span.name_status_title {
+    display: block;
+    float: left;
+    width: 50%;
+}
+
+span.delete_chat {
+    display: block;
+    float: right;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    background-color: #e30909;
+    text-align: center;
+    cursor: pointer;
+}
+
+.delete_user_chat {
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    background-color: #e30909;
+    text-align: center;
+    cursor: pointer;
+    display: block;
+    float: right;
+    font-size: 8px;
+}
+
+
+.button {
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px 13px 6px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    background-color: #098cec;
+    border: none;
+    border-bottom: 3px solid #36b3ff;
+    -webkit-box-shadow: 0 0 41px 1px rgba(54, 179, 255, .2);
+    box-shadow: 0 0 41px 1px rgba(54, 179, 255, .2);
+    -webkit-transition: .2s;
+    -o-transition: .2s;
+    transition: .2s;
+    text-align: center;
+    color: #fff;
+    text-transform: uppercase;
+}
+.red_button {
+    background-color: darkred;
+    border-color: darkred;
+}
+.button:hover,
+.button.alt:hover {
+    background-color: #36b3ff;
+    -webkit-box-shadow: 0 0 41px 1px rgba(54, 179, 255, .4);
+    box-shadow: 0 0 41px 1px rgba(54, 179, 255, .4);
+}
+.red_button:hover{
+    box-shadow: 0 0 41px 1px rgb(139 0 0 / 60%);
+    border-bottom-color: red;
+    background-color: darkred;
+}
+.button.alt {
+    background-color: transparent;
+    border: 2px solid #098cec;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.chat_field button {
+    margin-left: auto;
+    cursor: pointer;
+    display: block;
+    padding: 10px 13px 6px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    background-color: #098cec;
+    border: none;
+    border-bottom: 3px solid #36b3ff;
+    -webkit-box-shadow: 0 0 41px 1px rgba(54, 179, 255, .2);
+    box-shadow: 0 0 41px 1px rgba(54, 179, 255, .2);
+    -webkit-transition: .2s;
+    -o-transition: .2s;
+    transition: .2s;
+    text-align: center;
+    color: #fff;
+    text-transform: uppercase;
+}
+.chat_field button:hover {
+    background-color: #36b3ff;
+    -webkit-box-shadow: 0 0 41px 1px rgba(54, 179, 255, .4);
+    box-shadow: 0 0 41px 1px rgba(54, 179, 255, .4);
+}
+.yellow_text {
+    color: #ffb800;
+}
+
+.booster_avatar img {
+    width: 45%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+}
+
+.booster_panel_container input:not([type=checkbox]) {
+    width: 100%;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, .102);
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    padding: 10px 20px;
+}
+.booster_panel_container input:not([type=checkbox])::placeholder{
+    color: #7e7e7e
+}
+
+
+
+
+.table_td_line input:not([type=checkbox]),
+.search_chat input:not([type=checkbox])
+{
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, .102);
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    padding: 5px 10px;
+}
+.table_td_line input:not([type=checkbox])::placeholder,
+.search_chat input:not([type=checkbox])::placeholder
+{
+    color: #7e7e7e
+}
+
+
+.table_head_line .button {
+    width: 100%;
+}
+.customer_profile_table{
+    display: flex;
+    border: none;
+    flex-wrap: wrap;
+    padding-bottom: 50px;
+}
+.customer_profile_table .list_order_table_body_tr{
+    grid-template-columns: 1fr;
+    border: none;
+    gap: 20px;
+}
+
+.customer_profile_table .list_order_table_body_tr:not(:first-child):not(:last-child){
+    width: calc(50% - 20px);
+}
+.table_td_line.d-flex .button{
+    width: fit-content;
+    margin-top: 2rem;
+}
+.want_order_container .order_want_action input{
+    width: calc(50% - 10px);
+}
+.order_want_action {
+    margin-top: 20px;
+}
+.order_want_action .button{
+    width: 100%;
+}
+
+@media (max-width: 1280px) {
+    .booster_dashboard_container_blocks {
+        flex-wrap: wrap;
+    }
+    .booster_dashboard_info_block, .booster_dashboard_info_balance_block{
+        width: calc(50% - 15px);
+    }
+    .booster_dashboard_info_notification_block{
+        width: 100%;
+    }
+
+
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+
+    .booster_dashboard_top_icons {
+        justify-content: center;
+        text-align: center;
+    }
+    .booster_dashboard_top_icons > div{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .booster_dashboard_icon{
+        float: none;
+        margin-bottom: 1rem;
+        margin-right: 0;
+    }
+}
+.admin_list_withdrawal .list_order_table_head,
+.admin_list_withdrawal .list_order_table_body_tr
+{
+    grid-template-columns: repeat(5, 1fr)
+}
+@media (max-width: 992px) {
+    .header__inner{
+        padding-inline: 15px;
+    }
+    .booster_dashboard_title,
+    .booster_dashboard_top_icons{
+        width: 100%;
+    }
+    .booster_dashboard_top_icons{
+        justify-content: flex-start;
+        margin-top: 2rem;
+    }
+
+    #booster_left_menu{
+        position: fixed;
+        top: 60px;
+        transition: left .24s ease;
+        left: 100%;
+        width: 100%;
+        height: 100svh;
+        background-color: #0b071e;
+        z-index: 99;
+        justify-content: center;
+        align-items: center;
+        display: flex;
+        text-align: center;
+    }
+    #booster_left_menu.active{
+        transition: left .24s ease;
+        left: 0;
+    }
+    .booster_dashboard_container{
+        width: 100%;
+    }
+    #booster_left_menu ul{
+        width: auto;
+    }
+    #booster_left_menu ul li {
+        margin-bottom: 30px;
+    }
+
+    .gladiator_dashboard_tabs ul{
+        display: flex;
+        flex-direction: column;
+    }
+    #block_notifications{
+        width: 90svw;
+    }
+}
+.burger .burger__menu{
+    left: -15px;
+    width: 30px;
+}
+@media (max-width: 768px) {
+    .booster_dashboard_info_block, .booster_dashboard_info_balance_block, .booster_dashboard_info_notification_block{
+        width: 100%;
+        height: auto;
+        min-height: unset;
+    }
+
+    .list_order_table{
+        overflow-y: auto;
+    }
+    .list_order_table_head .table_head_line,
+    .list_order_table_body_tr .table_td_line{
+        min-width: 180px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .list_order_table_body_tr,
+    .list_order_table_head{
+        border: none;
+    }
+    .list_order_table_body_tr .table_td_line{
+        border-bottom: none;
+    }
+    .list_order_table_body_tr .table_td_line,
+    .list_order_table_head .table_head_line{
+        border-bottom: 1px solid #007fff;
+        border-left: none;
+    }
+    .list_order_table_body_tr .table_td_line{
+        min-height: 90px;
+
+    }
+    .list_order_table_body_tr:last-child .table_td_line {
+        border: none;
+    }
+    .booster_dashboard_chat {
+        display: flex;
+        flex-wrap: wrap;
+        float: none;
+    }
+    .list_chats,
+    .chat_container{
+        float: none;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    .list_chats ul,
+    .list_chats ul li{
+        float: none;
+        width: 100%;
+    }
+    .list_chats ul li{
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    .chat_container .top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        float: none;
+        justify-content: center;
+        height: auto;
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+    .chat_info,
+    .chat_buttons{
+        width: 100%;
+        float: none;
+    }
+    ul.users_chat li {
+        margin: 0;
+    }
+    .list_chats ul li ul.product_params{
+        margin-left: 0!important;
+    }
+
+    .customer_profile_table .list_order_table_body_tr:not(:first-child):not(:last-child){
+        width: 100%;
+
+    }
+    .list_order_table_body_tr .table_td_line, .list_order_table_head .table_head_line{
+        align-items: center;
+    }
+    .booster_dashboard_title h1 {
+        text-align: center;
+    }
+}
+
+@media (max-width: 575px){
+
+    .booster_dashboard_top_icons {
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+    }
+    .booster_dashboard_top_icons > div{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .booster_dashboard_icon{
+        float: none;
+        margin-bottom: 1rem;
+        margin-right: 0;
+    }
+}
+
+/*new styles 2024 chat admin*/
+.list_chats .delete_user_chat, .list_chats .delete_chat {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    min-height: 18px;
+    margin-left: 5px;
+}
+.list_chats .delete_user_chat {
+    margin-right: 5px;
+}
+.list_chats .delete_user_chat svg, .list_chats .delete_chat svg {
+    width: 100%;
+    max-height: 80%;
+    object-fit: contain;
+}
+.gladiator_dashboard_tabs ul li a {
+    color: #FFFFFF;
+}
+.gladiator_dashboard_tabs ul li a:hover {
+    text-decoration: none;
+}
+.message_info {
+    flex-wrap: wrap;
+    column-gap: 5px;
+}
+.message_info .message_date {
+    margin-right: 5px;
+}
+.chat_items_delete, .chat_items_edit {
+    min-width: 18px;
+} 
+.chat_items_delete {
+    margin-left: auto;
+}
+.message_status, .send_message .message_status {
+    top: 15px;
+}
+.chat_message {
+    padding: 10px 0;
+}
+.user_logo img {
+    min-width: 20px;
+    margin: 0 5px;
+}
+.list_chats > ul > li {
+    width: 100%;
+}
+.user_status {
+    min-width: 10px;
+}
+@media screen and (max-width: 1024px) and (min-width: 768px) {
+    .list_chats {
+      width: 35%;
+    }
+    .chat_container {
+      width: 62%;
+    }
+}
+#booster_popap_withdraw {
+    max-width: 95%;
+}
+.withdraw_fields_list {
+    flex-wrap: wrap;
+}
+.withdraw_fields_list li {
+  min-width: fit-content;
+}
+#app_admin_chat .delete_chat {
+    position: relative;
+    z-index: 2;
+}
+.list_chats ul li ul.product_params li {
+    min-width: 100%;
+}
+
+/*------------ FOOTER BOOSTER MSG -------------*/
+
+.booster_bottom_message {
+    max-width: 100%;
+    margin-left: 15px;
+    margin-right: 15px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    z-index: 1000;
+    background-color: #0a061d;
+    color: #fff;
+    text-align: center;
+    border: solid 1px #0983e0;
+    border-radius: 5px;
+}
+
+.bhide
+{
+    display: none;
+}
+
+.bshow
+{
+    display: block;
+}
+
+.booster_panel_container
+{
+    padding-bottom: 40px;
+}
