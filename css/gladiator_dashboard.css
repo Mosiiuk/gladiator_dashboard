@@ -128,6 +128,8 @@
     border-bottom: #098cec 1px solid;
     grid-template-columns: repeat(4, 1fr);
     align-items: center;
+    position: relative;
+    box-sizing: border-box;
 }
 
 .my_orders .list_order_table_head{
@@ -146,6 +148,31 @@
 }
 .dividtr {
     border-bottom: #098cec 1px solid;
+}
+
+.gladiator_dashboard_admin_dash .list_order_table_body_tr.order-grouped::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: 8px;
+    bottom: -1px;
+    left: 8px;
+    border-left: 2px solid #ff9900;
+    border-right: 2px solid #ff9900;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.gladiator_dashboard_admin_dash .list_order_table_body_tr.order-group-start::after {
+    border-top: 2px solid #ff9900;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+}
+
+.gladiator_dashboard_admin_dash .list_order_table_body_tr.order-group-end::after {
+    border-bottom: 2px solid #ff9900;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
 }
 
 .product_params {

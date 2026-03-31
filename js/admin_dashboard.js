@@ -64,6 +64,25 @@ if (typeof Vue === 'undefined') {
                             this.get_list();
                         }
                     },
+                    hasSameOrderId(index, offset) {
+                        const currentItem = this.order_list[index];
+                        const comparedItem = this.order_list[index + offset];
+
+                        if (!currentItem || !comparedItem) {
+                            return false;
+                        }
+
+                        return currentItem.order_id === comparedItem.order_id;
+                    },
+                    isGroupedOrder(index) {
+                        return this.hasSameOrderId(index, -1) || this.hasSameOrderId(index, 1);
+                    },
+                    isGroupedOrderStart(index) {
+                        return this.hasSameOrderId(index, 1) && !this.hasSameOrderId(index, -1);
+                    },
+                    isGroupedOrderEnd(index) {
+                        return this.hasSameOrderId(index, -1) && !this.hasSameOrderId(index, 1);
+                    },
                     shouldAddClass(index) {
                         return (index + 1) % 10 === 0;
                     },

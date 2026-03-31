@@ -30,7 +30,15 @@ if (file_exists($filename)) {
             <div class="table_head_line" ><?php echo __('Total cost','gladiator-theme');?></div>
             <div class="table_head_line" ><?php echo __('Action','gladiator-theme');?></div>
         </div>
-        <div :class="['list_order_table_body_tr', { 'dividtr': shouldAddClass(index) }]"  v-for="info, index in order_list"  >
+        <div :class="[
+                'list_order_table_body_tr',
+                {
+                    'dividtr': shouldAddClass(index),
+                    'order-grouped': isGroupedOrder(index),
+                    'order-group-start': isGroupedOrderStart(index),
+                    'order-group-end': isGroupedOrderEnd(index)
+                }
+            ]"  v-for="info, index in order_list"  >
             <div class="table_td_line" >
                 {{info.product_name}} ( #{{info.order_id}} )
                 <ul class="product_params">
