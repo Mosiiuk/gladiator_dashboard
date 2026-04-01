@@ -153,7 +153,6 @@ class Gladiator_Dashboard_Plugin {
         ],
     ];
     public $Gladiator_Dashboard_TelegramBot_Instance;
-    private $google_sheet_sync_option_name = 'gdp_google_sheet_sync_settings';
 
     public function __construct() {
         $this->shortcode_handler = new Gladiator_Dashboard_Shortcode();
@@ -176,168 +175,11 @@ class Gladiator_Dashboard_Plugin {
         add_action('wp_logout', [$this,'wp_logout_booster']);
 
         add_action('init', [$this,'init']);
-        add_action('admin_init', [$this,'register_google_sheet_sync_settings']);
-        add_action('admin_menu', [$this,'register_google_sheet_sync_settings_page']);
         add_action('acf/init', [$this,'add_acf_field_to_user_profile']);
 
 
         add_filter('bulk_actions-edit-shop_order', [$this,'admin_shop_order_bulk']);
         add_action('admin_action_clear_booster_price', [$this,'handle_clear_booster_price']);
-    }
-
-    public function get_google_sheet_sync_defaults()
-    {
-        return [
-            'enabled' => 0,
-            'webhook_url' => '',
-            'spreadsheet_url' => 'https://docs.google.com/spreadsheets/d/1blky2A_FGfE2P9x_YEmEnD6kTz8OWyPxNUPdmlKG0FU/edit?usp=sharing',
-            'sheet_tab_name' => 'Orders',
-            'trigger_status' => 'processing',
-            'row_mode' => 'order_item',
-            'default_sheet_status' => 'waiting for booster',
-            'duplicate_handling' => 'skip',
-        ];
-    }
-
-    public function register_google_sheet_sync_settings()
-    {
-        register_setting(
-            'gladiator_google_sheet_sync',
-            $this->google_sheet_sync_option_name,
-            [$this, 'sanitize_google_sheet_sync_settings']
-        );
-    }
-
-    public function sanitize_google_sheet_sync_settings($input)
-    {
-        $defaults = $this->get_google_sheet_sync_defaults();
-        $input = is_array($input) ? $input : [];
-
-        $settings = [
-            'enabled' => empty($input['enabled']) ? 0 : 1,
-            'webhook_url' => isset($input['webhook_url']) ? esc_url_raw(trim($input['webhook_url'])) : $defaults['webhook_url'],
-            'spreadsheet_url' => isset($input['spreadsheet_url']) ? esc_url_raw(trim($input['spreadsheet_url'])) : $defaults['spreadsheet_url'],
-            'sheet_tab_name' => isset($input['sheet_tab_name']) ? sanitize_text_field($input['sheet_tab_name']) : $defaults['sheet_tab_name'],
-            'trigger_status' => isset($input['trigger_status']) ? sanitize_key($input['trigger_status']) : $defaults['trigger_status'],
-            'row_mode' => isset($input['row_mode']) ? sanitize_key($input['row_mode']) : $defaults['row_mode'],
-            'default_sheet_status' => isset($input['default_sheet_status']) ? sanitize_text_field($input['default_sheet_status']) : $defaults['default_sheet_status'],
-            'duplicate_handling' => isset($input['duplicate_handling']) ? sanitize_key($input['duplicate_handling']) : $defaults['duplicate_handling'],
-        ];
-
-        if (!in_array($settings['trigger_status'], ['pending', 'on-hold', 'processing', 'completed'], true)) {
-            $settings['trigger_status'] = $defaults['trigger_status'];
-        }
-
-        if (!in_array($settings['row_mode'], ['order_item', 'order'], true)) {
-            $settings['row_mode'] = $defaults['row_mode'];
-        }
-
-        if (!in_array($settings['duplicate_handling'], ['skip', 'allow_duplicates'], true)) {
-            $settings['duplicate_handling'] = $defaults['duplicate_handling'];
-        }
-
-        return $settings;
-    }
-
-    public function register_google_sheet_sync_settings_page()
-    {
-        add_options_page(
-            'Gladiator Google Sheet Sync',
-            'Gladiator Sheet Sync',
-            'manage_options',
-            'gladiator-google-sheet-sync',
-            [$this, 'render_google_sheet_sync_settings_page']
-        );
-    }
-
-    public function render_google_sheet_sync_settings_page()
-    {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-
-        $settings = wp_parse_args(get_option($this->google_sheet_sync_option_name, []), $this->get_google_sheet_sync_defaults());
-        ?>
-        <div class="wrap">
-            <h1>Gladiator Google Sheet Sync</h1>
-            <p>Orders can be exported to Google Sheets when the configured WooCommerce status is reached.</p>
-
-            <form method="post" action="options.php">
-                <?php settings_fields('gladiator_google_sheet_sync'); ?>
-
-                <table class="form-table" role="presentation">
-                    <tbody>
-                    <tr>
-                        <th scope="row">Enable sync</th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[enabled]" value="1" <?php checked(!empty($settings['enabled'])); ?>>
-                                Send orders to the Google Sheet webhook
-                            </label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_webhook_url">Webhook URL</label></th>
-                        <td>
-                            <input id="gdp_google_sheet_sync_webhook_url" type="url" class="regular-text code" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[webhook_url]" value="<?php echo esc_attr($settings['webhook_url']); ?>" placeholder="https://script.google.com/macros/s/.../exec">
-                            <p class="description">Paste the deployed Google Apps Script Web App URL here.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_spreadsheet_url">Spreadsheet URL</label></th>
-                        <td>
-                            <input id="gdp_google_sheet_sync_spreadsheet_url" type="url" class="regular-text code" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[spreadsheet_url]" value="<?php echo esc_attr($settings['spreadsheet_url']); ?>">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_sheet_tab_name">Tab name</label></th>
-                        <td>
-                            <input id="gdp_google_sheet_sync_sheet_tab_name" type="text" class="regular-text" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[sheet_tab_name]" value="<?php echo esc_attr($settings['sheet_tab_name']); ?>">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_trigger_status">Trigger status</label></th>
-                        <td>
-                            <select id="gdp_google_sheet_sync_trigger_status" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[trigger_status]">
-                                <?php foreach (['pending', 'on-hold', 'processing', 'completed'] as $status) : ?>
-                                    <option value="<?php echo esc_attr($status); ?>" <?php selected($settings['trigger_status'], $status); ?>>
-                                        <?php echo esc_html($status); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_row_mode">Row mode</label></th>
-                        <td>
-                            <select id="gdp_google_sheet_sync_row_mode" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[row_mode]">
-                                <option value="order_item" <?php selected($settings['row_mode'], 'order_item'); ?>>1 row = 1 order item</option>
-                                <option value="order" <?php selected($settings['row_mode'], 'order'); ?>>1 row = 1 full order</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_default_sheet_status">Default sheet status</label></th>
-                        <td>
-                            <input id="gdp_google_sheet_sync_default_sheet_status" type="text" class="regular-text" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[default_sheet_status]" value="<?php echo esc_attr($settings['default_sheet_status']); ?>">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="gdp_google_sheet_sync_duplicate_handling">Duplicate handling</label></th>
-                        <td>
-                            <select id="gdp_google_sheet_sync_duplicate_handling" name="<?php echo esc_attr($this->google_sheet_sync_option_name); ?>[duplicate_handling]">
-                                <option value="skip" <?php selected($settings['duplicate_handling'], 'skip'); ?>>Skip already exported rows</option>
-                                <option value="allow_duplicates" <?php selected($settings['duplicate_handling'], 'allow_duplicates'); ?>>Allow duplicates</option>
-                            </select>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-
-                <?php submit_button('Save Sheet Sync Settings'); ?>
-            </form>
-        </div>
-        <?php
     }
 
     public function admin_shop_order_bulk($actions)
@@ -812,4 +654,5 @@ EOT;
 $gladiator_dashboard_plugin = new Gladiator_Dashboard_Plugin();
 
 $gladiator_dashboard_plugin->create_acf_for_page();
+
 
