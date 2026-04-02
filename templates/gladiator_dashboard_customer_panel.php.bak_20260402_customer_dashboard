@@ -21,7 +21,7 @@ $balance = (float) $balance ? $balance : 0;
   <div class="booster_dashboard_container">
 
 		<?php
-			$inc_title = __( 'My Account', 'gladiator-theme' );
+		$inc_title = __( 'Dashboard', 'gladiator-theme' );
 		$filename  = __DIR__ . '/_customer_top_block.php';
 		if ( file_exists( $filename ) ) {
 			include $filename;
@@ -58,24 +58,51 @@ $balance = (float) $balance ? $balance : 0;
 <!--        </div>-->
 <!--      </div>-->
 
-	      <div class="style_rectangle booster_dashboard_info_block">
-	        <div class="booster_dashboard_info_name">
-	          <h5>
-	          <span class="yellow_text">
-	            <?php echo esc_html( $full_name ); ?>,
-	          </span>
-	            <span>
-	            <?php echo __( 'have a good day today!', 'gladiator-theme' ); ?>
-	          </span>
-	          </h5>
-	                      <a href="<?php echo site_url(); ?>" class="dashboard_button mt-5 w-100 button">
-	          							<?php echo __( 'Back to Home Page', 'gladiator-theme' ); ?>
-	                      </a>
-	        </div>
+      <div class="style_rectangle booster_dashboard_info_block">
+        <div class="booster_dashboard_info_name">
+          <h5>
+          <span class="yellow_text">
+            <?php echo $full_name; ?>
+          </span>
+            <span>
+            <?php echo __( 'Have, a good day today!', 'gladiator-theme' ); ?>
+          </span>
+          </h5>
+                      <a href="<?php echo site_url(); ?>" class="dashboard_button mt-5 w-100 button">
+          							<?php echo __( 'Browse Offers', 'gladiator-theme' ); ?>
+                      </a>
+        </div>
 
-	      </div>
+      </div>
+      <div class="style_rectangle booster_dashboard_info_balance_block">
+        <div class="booster_dashboard_info_balance">
+          <h5>
+				    <?php echo __( 'Balance', 'gladiator-theme' ); ?>
+          </h5>
 
-	    </div>
+          <h5 data-booster_balance="1" class="yellow_text m-0 ml-2">
+            <span>$</span>
+				    <?php echo $balance; ?>
+          </h5>
+        </div>
+      </div>
+      <div class="style_rectangle booster_dashboard_info_notification_block">
+        <div class="booster_dashboard_info_notification_title mb-3">
+          <h5>
+				    <?php echo __( 'Notification', 'gladiator-theme' ); ?>
+          </h5>
+        </div>
+        <div class="booster_dashboard_info_notification_container">
+
+        </div>
+        <div class="booster_dashboard_info_notification_btn">
+          <button class="dashboard_button w-100 button">
+				    <?php echo __( 'View All', 'gladiator-theme' ); ?>
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 <!--  <?php echo str_replace( $_SERVER['DOCUMENT_ROOT'], '', __FILE__ ); ?> ]-->
