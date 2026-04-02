@@ -383,7 +383,6 @@ class Gladiator_Dashboard_Core {
 
         $response = wp_remote_post($settings['webhook_url'], [
             'timeout' => 20,
-            'redirection' => 0,
             'headers' => [
                 'Content-Type' => 'application/json; charset=utf-8',
             ],
@@ -405,16 +404,14 @@ class Gladiator_Dashboard_Core {
 
         $response_code = wp_remote_retrieve_response_code($response);
         $response_body = wp_remote_retrieve_body($response);
-        $response_location = wp_remote_retrieve_header($response, 'location');
 
-        if (!$this->is_google_sheet_sync_success_response($response_code, $response_location)) {
+        if ($response_code < 200 || $response_code >= 300) {
             $this->log_google_sheet_sync(
                 'Google Sheet sync returned non-success status.',
                 [
                     'order_id' => $order_id,
                     'response_code' => $response_code,
                     'response_body' => $response_body,
-                    'response_location' => $response_location,
                 ],
                 'error'
             );
@@ -622,21 +619,6 @@ class Gladiator_Dashboard_Core {
         }
 
         return '';
-    }
-
-    private function is_google_sheet_sync_success_response($response_code, $response_location = '')
-    {
-        if ($response_code >= 200 && $response_code < 300) {
-            return true;
-        }
-
-        // Google Apps Script Web Apps often return a 302 redirect to
-        // script.googleusercontent.com after successfully processing the POST body.
-        if ($response_code >= 300 && $response_code < 400 && is_string($response_location)) {
-            return strpos($response_location, 'script.googleusercontent.com/macros/echo') !== false;
-        }
-
-        return false;
     }
 
     private function mark_google_sheet_sync_exported($order, $rows, $row_mode)
