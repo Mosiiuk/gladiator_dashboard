@@ -663,16 +663,20 @@ class Gladiator_Dashboard_Core {
         $context = is_array($context) ? $context : [];
         $context['source'] = 'gladiator_google_sheet_sync';
 
-        if (function_exists('wc_get_logger')) {
-            $logger = wc_get_logger();
+        try {
+            if (function_exists('wc_get_logger')) {
+                $logger = wc_get_logger();
 
-            if (method_exists($logger, $level)) {
-                $logger->{$level}($message, $context);
+                if (method_exists($logger, $level)) {
+                    $logger->{$level}($message, $context);
+                    return;
+                }
+
+                $logger->info($message, $context);
                 return;
             }
-
-            $logger->info($message, $context);
-            return;
+        } catch (Throwable $e) {
+            error_log('Google sheet sync logger fallback: ' . $e->getMessage());
         }
 
         error_log($message . ' ' . wp_json_encode($context));
