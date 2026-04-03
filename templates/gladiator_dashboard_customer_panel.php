@@ -28,7 +28,7 @@ $balance = (float) $balance ? $balance : 0;
 		}
 		?>
 
-    <div class="booster_dashboard_container_blocks">
+    <div class="booster_dashboard_container_blocks customer_dashboard_two_blocks">
 <!--      <div class="style_rectangle booster_dashboard_info_block">-->
 
 <!--        <div class="booster_dashboard_find_order_btn">-->
@@ -92,21 +92,6 @@ $balance = (float) $balance ? $balance : 0;
 				      <?php echo __( 'Contact our 24/7 Discord', 'gladiator-theme' ); ?>
             </a>
           </div>
-        </div>
-      </div>
-      <div class="style_rectangle booster_dashboard_info_notification_block">
-        <div class="booster_dashboard_info_notification_title mb-3">
-          <h5>
-				    <?php echo __( 'Notification', 'gladiator-theme' ); ?>
-          </h5>
-        </div>
-        <div class="booster_dashboard_info_notification_container">
-
-        </div>
-        <div class="booster_dashboard_info_notification_btn">
-          <button class="dashboard_button w-100 button">
-				    <?php echo __( 'View All', 'gladiator-theme' ); ?>
-          </button>
         </div>
       </div>
 

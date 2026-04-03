@@ -509,6 +509,11 @@
 .booster_dashboard_info_balance_block {
     width: 24%;
 }
+
+.customer_dashboard_two_blocks .booster_dashboard_info_block,
+.customer_dashboard_two_blocks .booster_dashboard_info_balance_block {
+    width: calc(50% - 15px);
+}
 .booster_dashboard_info_notification_title {
     justify-content: center;
     display: flex;
@@ -1632,6 +1637,14 @@ span.delete_chat {
     grid-template-columns: repeat(5, 1fr)
 }
 @media (max-width: 992px) {
+    .customer_dashboard_two_blocks {
+        flex-direction: column;
+    }
+    .customer_dashboard_two_blocks .booster_dashboard_info_block,
+    .customer_dashboard_two_blocks .booster_dashboard_info_balance_block {
+        width: 100%;
+    }
+
     .header__inner{
         padding-inline: 15px;
     }
