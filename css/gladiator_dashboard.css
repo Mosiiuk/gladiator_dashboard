@@ -523,6 +523,112 @@
 .booster_dashboard_info_balance h5{
     margin-bottom: 0;
 }
+.booster_dashboard_info_discord {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100%;
+}
+
+.booster_dashboard_info_discord h5 {
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.booster_dashboard_info_discord p {
+    margin: 0;
+    color: #fff;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.booster_dashboard_info_discord_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 200px;
+    box-sizing: border-box;
+}
+
+.booster_dashboard_info_discord_btn {
+    margin-top: auto;
+    width: 100%;
+}
+
+.booster_dashboard_info_discord_btn .dashboard_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.customer_dashboard_discord_popup_overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(4, 3, 15, 0.78);
+    z-index: 1001;
+}
+
+.customer_dashboard_discord_popup_overlay.active {
+    display: flex;
+}
+
+.customer_dashboard_discord_popup {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    border: 1px solid #098cec;
+    border-radius: 12px;
+    padding: 32px;
+    background: #0b071e;
+    box-shadow: 0 0 20px rgba(9, 140, 236, 0.45);
+}
+
+.customer_dashboard_discord_popup h3 {
+    margin-bottom: 16px;
+    color: #fff;
+    text-align: left;
+}
+
+.customer_dashboard_discord_popup p,
+.customer_dashboard_discord_popup li {
+    color: #fff;
+    line-height: 1.6;
+}
+
+.customer_dashboard_discord_popup_steps {
+    margin: 16px 0 0;
+    padding-left: 22px;
+}
+
+.customer_dashboard_discord_popup_note {
+    margin-top: 16px;
+    color: #f9bc00;
+    font-weight: 600;
+}
+
+.customer_dashboard_discord_popup_close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.customer_dashboard_discord_popup_close:hover {
+    color: #098cec;
+}
 .booster_dashboard_legal h2{
     text-align: left;
     color: #fff;
@@ -1582,6 +1688,10 @@ span.delete_chat {
         width: 100%;
         height: auto;
         min-height: unset;
+    }
+
+    .customer_dashboard_discord_popup {
+        padding: 24px 20px;
     }
 
     .list_order_table{
