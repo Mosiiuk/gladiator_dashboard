@@ -21,7 +21,7 @@ $balance = (float) $balance ? $balance : 0;
   <div class="booster_dashboard_container">
 
 		<?php
-		$inc_title = __( 'Dashboard', 'gladiator-theme' );
+		$inc_title = __( 'My Account', 'gladiator-theme' );
 		$filename  = __DIR__ . '/_customer_top_block.php';
 		if ( file_exists( $filename ) ) {
 			include $filename;
@@ -65,11 +65,11 @@ $balance = (float) $balance ? $balance : 0;
             <?php echo $full_name; ?>
           </span>
             <span>
-            <?php echo __( 'Have, a good day today!', 'gladiator-theme' ); ?>
+            <?php echo __( ', have a good day today!', 'gladiator-theme' ); ?>
           </span>
           </h5>
                       <a href="<?php echo site_url(); ?>" class="dashboard_button w-100 button">
-          							<?php echo __( 'Browse Offers', 'gladiator-theme' ); ?>
+          							<?php echo __( 'Back to Home Page', 'gladiator-theme' ); ?>
                       </a>
         </div>
 
