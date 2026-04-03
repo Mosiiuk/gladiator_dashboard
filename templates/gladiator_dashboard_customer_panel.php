@@ -82,16 +82,16 @@ $balance = (float) $balance ? $balance : 0;
           <p>
 				    <?php echo __( 'Join our Discord and contact the team anytime for order help and account support.', 'gladiator-theme' ); ?>
           </p>
-        </div>
-        <div class="booster_dashboard_info_discord_btn">
-          <a
-            href="https://discord.gg/ZVa5Npz3kR"
-            class="dashboard_button w-100 button js_customer_dashboard_discord_link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-				    <?php echo __( 'Contact our 24/7 Discord', 'gladiator-theme' ); ?>
-          </a>
+          <div class="booster_dashboard_info_discord_btn">
+            <a
+              href="https://discord.gg/ZVa5Npz3kR"
+              class="dashboard_button w-100 button js_customer_dashboard_discord_link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+				      <?php echo __( 'Contact our 24/7 Discord', 'gladiator-theme' ); ?>
+            </a>
+          </div>
         </div>
       </div>
       <div class="style_rectangle booster_dashboard_info_notification_block">
