@@ -58,7 +58,7 @@ $balance = (float) $balance ? $balance : 0;
 <!--        </div>-->
 <!--      </div>-->
 
-      <div class="style_rectangle booster_dashboard_info_block">
+      <div class="style_rectangle booster_dashboard_info_block customer_dashboard_intro_block">
         <div class="booster_dashboard_info_name">
           <h5>
           <span class="yellow_text">
@@ -68,7 +68,7 @@ $balance = (float) $balance ? $balance : 0;
             <?php echo __( 'Have, a good day today!', 'gladiator-theme' ); ?>
           </span>
           </h5>
-                      <a href="<?php echo site_url(); ?>" class="dashboard_button mt-5 w-100 button">
+                      <a href="<?php echo site_url(); ?>" class="dashboard_button w-100 button">
           							<?php echo __( 'Browse Offers', 'gladiator-theme' ); ?>
                       </a>
         </div>
