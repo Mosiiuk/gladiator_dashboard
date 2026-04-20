@@ -38,7 +38,7 @@
             }
         ?>
         <li>
-            <a href="<?php echo wp_logout_url(); ?>" > <?php echo __('Log out','gladiator-theme');?> </a>
+            <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" > <?php echo __('Log out','gladiator-theme');?> </a>
         </li>
     </ul>
 </div>
