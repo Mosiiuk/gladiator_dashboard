@@ -330,7 +330,7 @@ class Gladiator_Dashboard_Core {
         $defaults = [
             'enabled' => 0,
             'webhook_url' => '',
-            'spreadsheet_url' => 'https://docs.google.com/spreadsheets/d/1vlfzadL-hmWqKVIpqkftY-7HRHr9DNq-paQk7lN77Tk/edit?gid=879901588#gid=879901588',
+            'spreadsheet_url' => 'https://docs.google.com/spreadsheets/d/1blky2A_FGfE2P9x_YEmEnD6kTz8OWyPxNUPdmlKG0FU/edit?usp=sharing',
             'sheet_tab_name' => 'Orders',
             'trigger_status' => 'processing',
             'row_mode' => 'order_item',
@@ -468,7 +468,6 @@ class Gladiator_Dashboard_Core {
             'spreadsheet_url' => $settings['spreadsheet_url'],
             'spreadsheet_id' => $this->extract_google_sheet_id($settings['spreadsheet_url']),
             'sheet_tab_name' => $settings['sheet_tab_name'],
-            'headers' => $this->get_google_sheet_sync_headers(),
             'row_mode' => $row_mode,
             'duplicate_handling' => $duplicate_handling,
             'trigger_status' => $settings['trigger_status'],
@@ -482,69 +481,8 @@ class Gladiator_Dashboard_Core {
                 'customer_note' => $order->get_customer_note(),
                 'discord_id' => $this->get_order_discord_id($order),
             ],
-            'rows' => array_map([$this, 'prepare_google_sheet_sync_row'], array_values(array_filter($rows))),
+            'rows' => array_values(array_filter($rows)),
         ];
-    }
-
-    private function get_google_sheet_sync_headers()
-    {
-        return [
-            'Date',
-            'Order ID',
-            'Discord ID',
-            'G2G\\FP\\Discord convo',
-            'Order specification',
-            'Order status',
-            'Order stat',
-            'Currency',
-            'price USD',
-            'price paid',
-            'Profit t\'s',
-            'Profit %',
-            'Margin',
-            'Agent',
-            'Status',
-            'Comment for the order',
-        ];
-    }
-
-    private function prepare_google_sheet_sync_row($row)
-    {
-        $row = is_array($row) ? $row : [];
-        $price = isset($row['price']) ? $row['price'] : '';
-        $currency = isset($row['currency']) ? $row['currency'] : '';
-
-        $row['g2g_fp_discord_convo'] = isset($row['g2g_fp_discord_convo']) ? $row['g2g_fp_discord_convo'] : '';
-        $row['order_stat'] = isset($row['order_stat']) ? $row['order_stat'] : '';
-        $row['price_usd'] = isset($row['price_usd']) ? $row['price_usd'] : ($currency === 'USD' ? $price : '');
-        $row['price_paid'] = isset($row['price_paid']) ? $row['price_paid'] : '';
-        $row['profit_ts'] = isset($row['profit_ts']) ? $row['profit_ts'] : '';
-        $row['profit_percent'] = isset($row['profit_percent']) ? $row['profit_percent'] : '';
-        $row['margin'] = isset($row['margin']) ? $row['margin'] : '';
-        $row['agent'] = isset($row['agent']) ? $row['agent'] : '';
-        $row['status'] = isset($row['status']) ? $row['status'] : '';
-        $row['comment_for_the_order'] = isset($row['comment_for_the_order']) ? $row['comment_for_the_order'] : (isset($row['customer_note']) ? $row['customer_note'] : '');
-
-        $row['values'] = [
-            isset($row['date']) ? $row['date'] : '',
-            isset($row['order_id']) ? $row['order_id'] : '',
-            isset($row['discord_id']) ? $row['discord_id'] : '',
-            $row['g2g_fp_discord_convo'],
-            isset($row['order_specification']) ? $row['order_specification'] : '',
-            isset($row['order_status']) ? $row['order_status'] : '',
-            $row['order_stat'],
-            $currency,
-            $row['price_usd'],
-            $row['price_paid'],
-            $row['profit_ts'],
-            $row['profit_percent'],
-            $row['margin'],
-            $row['agent'],
-            $row['status'],
-            $row['comment_for_the_order'],
-        ];
-
-        return $row;
     }
 
     private function build_google_sheet_order_row($order, $settings)

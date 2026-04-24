@@ -190,7 +190,7 @@ class Gladiator_Dashboard_Plugin {
         return [
             'enabled' => 0,
             'webhook_url' => '',
-            'spreadsheet_url' => 'https://docs.google.com/spreadsheets/d/1vlfzadL-hmWqKVIpqkftY-7HRHr9DNq-paQk7lN77Tk/edit?gid=879901588#gid=879901588',
+            'spreadsheet_url' => 'https://docs.google.com/spreadsheets/d/1blky2A_FGfE2P9x_YEmEnD6kTz8OWyPxNUPdmlKG0FU/edit?usp=sharing',
             'sheet_tab_name' => 'Orders',
             'trigger_status' => 'processing',
             'row_mode' => 'order_item',
