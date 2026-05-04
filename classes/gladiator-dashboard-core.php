@@ -481,6 +481,7 @@ class Gladiator_Dashboard_Core {
                 'created_at' => $order->get_date_created() ? $order->get_date_created()->date('c') : '',
                 'customer_note' => $order->get_customer_note(),
                 'discord_id' => $this->get_order_discord_id($order),
+                'g2g_fp_discord_convo' => $this->get_order_g2g_fp_discord_convo($order),
             ],
             'rows' => array_map([$this, 'prepare_google_sheet_sync_row'], array_values(array_filter($rows))),
         ];
@@ -603,6 +604,7 @@ class Gladiator_Dashboard_Core {
             'order_id' => $order->get_id(),
             'order_number' => $order->get_order_number(),
             'discord_id' => $this->get_order_discord_id($order),
+            'g2g_fp_discord_convo' => $this->get_order_g2g_fp_discord_convo($order),
             'order_specification' => implode(' | ', $product_names),
             'order_status' => $settings['default_sheet_status'],
             'woocommerce_status' => $order->get_status(),
@@ -632,6 +634,7 @@ class Gladiator_Dashboard_Core {
             'order_id' => $order->get_id(),
             'order_number' => $order->get_order_number(),
             'discord_id' => $this->get_order_discord_id($order),
+            'g2g_fp_discord_convo' => $this->get_order_g2g_fp_discord_convo($order),
             'order_specification' => $item->get_name(),
             'product_name' => $item->get_name(),
             'product_id' => $item->get_product_id(),
@@ -696,13 +699,114 @@ class Gladiator_Dashboard_Core {
 
     private function get_order_discord_id($order)
     {
-        $discord_id = $order->get_meta('_billing_discord_id', true);
+        $discord_id = $this->get_first_order_meta_value(
+            $order,
+            [
+                '_billing_discord_id',
+                'billing_discord_id',
+                'account_discort_tag',
+                '_account_discort_tag',
+                'discord_id',
+                '_discord_id',
+                'discord',
+                '_discord',
+            ]
+        );
 
-        if ($discord_id === '') {
-            $discord_id = $order->get_meta('billing_discord_id', true);
+        if ($discord_id === '' && $order->get_user_id()) {
+            $discord_id = $this->get_first_user_meta_value(
+                $order->get_user_id(),
+                [
+                    'billing_discord_id',
+                    'account_discort_tag',
+                    'discord_id',
+                    'discord',
+                ]
+            );
         }
 
         return is_scalar($discord_id) ? (string) $discord_id : '';
+    }
+
+    private function get_order_g2g_fp_discord_convo($order)
+    {
+        $convo = $this->get_first_order_meta_value(
+            $order,
+            [
+                'g2g_fp_discord_convo',
+                '_g2g_fp_discord_convo',
+                'g2g_fp_discord',
+                '_g2g_fp_discord',
+                'g2g_fp_convo',
+                '_g2g_fp_convo',
+                'funpay_convo',
+                '_funpay_convo',
+                'funpay_url',
+                '_funpay_url',
+                'funpay_link',
+                '_funpay_link',
+                'fp_url',
+                '_fp_url',
+                'fp_link',
+                '_fp_link',
+                'g2g_url',
+                '_g2g_url',
+                'g2g_link',
+                '_g2g_link',
+                'discord_convo',
+                '_discord_convo',
+                'discord_conversation',
+                '_discord_conversation',
+            ]
+        );
+
+        if ($convo === '' && $order->get_user_id()) {
+            $convo = $this->get_first_user_meta_value(
+                $order->get_user_id(),
+                [
+                    'g2g_fp_discord_convo',
+                    'g2g_fp_discord',
+                    'g2g_fp_convo',
+                    'funpay_convo',
+                    'funpay_url',
+                    'funpay_link',
+                    'fp_url',
+                    'fp_link',
+                    'g2g_url',
+                    'g2g_link',
+                    'discord_convo',
+                    'discord_conversation',
+                ]
+            );
+        }
+
+        return is_scalar($convo) ? (string) $convo : '';
+    }
+
+    private function get_first_order_meta_value($order, $keys)
+    {
+        foreach ($keys as $key) {
+            $value = $order->get_meta($key, true);
+
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return trim((string) $value);
+            }
+        }
+
+        return '';
+    }
+
+    private function get_first_user_meta_value($user_id, $keys)
+    {
+        foreach ($keys as $key) {
+            $value = get_user_meta($user_id, $key, true);
+
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return trim((string) $value);
+            }
+        }
+
+        return '';
     }
 
     private function extract_google_sheet_id($spreadsheet_url)
