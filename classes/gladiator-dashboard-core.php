@@ -495,9 +495,9 @@ class Gladiator_Dashboard_Core {
             'G2G\\FP\\Discord convo',
             'Order specification',
             'Order status',
-            'Order stat',
+            'Order status',
             'Currency',
-            'price USD',
+            'Customer price USD',
             'price paid',
             'Profit t\'s',
             'Profit %',
@@ -515,8 +515,8 @@ class Gladiator_Dashboard_Core {
         $currency = isset($row['currency']) ? $row['currency'] : '';
 
         $row['g2g_fp_discord_convo'] = isset($row['g2g_fp_discord_convo']) ? $row['g2g_fp_discord_convo'] : '';
-        $row['order_stat'] = isset($row['order_stat']) ? $row['order_stat'] : '';
-        $row['price_usd'] = isset($row['price_usd']) ? $row['price_usd'] : ($currency === 'USD' ? $price : '');
+        $row['order_stat'] = isset($row['order_stat']) ? $row['order_stat'] : $price;
+        $row['price_usd'] = isset($row['price_usd']) ? $row['price_usd'] : $this->convert_google_sheet_price_to_usd($price, $currency);
         $row['price_paid'] = isset($row['price_paid']) ? $row['price_paid'] : '';
         $row['profit_ts'] = isset($row['profit_ts']) ? $row['profit_ts'] : '';
         $row['profit_percent'] = isset($row['profit_percent']) ? $row['profit_percent'] : '';
@@ -545,6 +545,38 @@ class Gladiator_Dashboard_Core {
         ];
 
         return $row;
+    }
+
+    private function convert_google_sheet_price_to_usd($price, $currency)
+    {
+        $price = is_numeric($price) ? (float) $price : (float) preg_replace('/[^0-9.\-]/', '', (string) $price);
+        $currency = strtoupper(trim((string) $currency));
+
+        if ($price <= 0) {
+            return '';
+        }
+
+        if ($currency === 'USD') {
+            return wc_format_decimal($price, 2);
+        }
+
+        global $WOOCS;
+
+        if (is_object($WOOCS) && method_exists($WOOCS, 'convert_from_to_currency')) {
+            $converted = $WOOCS->convert_from_to_currency($price, $currency, 'USD');
+
+            if (is_numeric($converted)) {
+                return wc_format_decimal($converted, 2);
+            }
+        }
+
+        $filtered = apply_filters('woocs_exchange_value', $price, $currency, 'USD');
+
+        if (is_numeric($filtered) && (float) $filtered !== $price) {
+            return wc_format_decimal($filtered, 2);
+        }
+
+        return '';
     }
 
     private function build_google_sheet_order_row($order, $settings)
