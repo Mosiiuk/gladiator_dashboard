@@ -7,58 +7,6 @@ $profile_image = $custom_profile_image ? $custom_profile_image : plugins_url() .
 
 $balance = get_field( 'gbcoin', 'user_' . $current_user->ID );
 $balance = (float) $balance ? $balance : 0;
-
-$get_dashboard_discord_option = function ( $field_name, $fallback ) {
-	if ( ! function_exists( 'get_field' ) ) {
-		return $fallback;
-	}
-
-	$value = get_field( $field_name, 'option' );
-
-	if ( is_string( $value ) ) {
-		$value = trim( $value );
-	}
-
-	return $value !== '' && $value !== null ? $value : $fallback;
-};
-
-$discord_card_title = $get_dashboard_discord_option(
-	'customer_dashboard_discord_card_title',
-	__( 'Connect on Discord', 'gladiator-theme' )
-);
-$discord_card_text = $get_dashboard_discord_option(
-	'customer_dashboard_discord_card_text',
-	__( 'Join our Discord and contact the team anytime for order help and account support.', 'gladiator-theme' )
-);
-$discord_button_text = $get_dashboard_discord_option(
-	'customer_dashboard_discord_button_text',
-	__( 'Contact our 24/7 Discord', 'gladiator-theme' )
-);
-$discord_button_link = $get_dashboard_discord_option(
-	'customer_dashboard_discord_link',
-	'https://discord.gg/ZVa5Npz3kR'
-);
-$discord_popup_title = $get_dashboard_discord_option(
-	'customer_dashboard_discord_popup_title',
-	__( 'Next steps on Discord', 'gladiator-theme' )
-);
-$discord_popup_intro = $get_dashboard_discord_option(
-	'customer_dashboard_discord_popup_intro',
-	__( 'After joining our Discord server, please follow these steps:', 'gladiator-theme' )
-);
-$discord_popup_steps_text = $get_dashboard_discord_option(
-	'customer_dashboard_discord_popup_steps',
-	implode( "\n", array(
-		__( 'Open the welcome or support channel and read the server instructions.', 'gladiator-theme' ),
-		__( 'Create a ticket or message the support team with your order details.', 'gladiator-theme' ),
-		__( 'Share your order number and a short description so we can help you faster.', 'gladiator-theme' ),
-	) )
-);
-$discord_popup_steps = array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', $discord_popup_steps_text ) ) );
-$discord_popup_note = $get_dashboard_discord_option(
-	'customer_dashboard_discord_popup_note',
-	__( 'Our team is available there 24/7.', 'gladiator-theme' )
-);
 ?>
 
 <div class="booster_panel_container">
@@ -127,41 +75,41 @@ $discord_popup_note = $get_dashboard_discord_option(
 
       </div>
       <div class="style_rectangle booster_dashboard_info_balance_block booster_dashboard_info_discord_block">
-	        <div class="booster_dashboard_info_discord">
-	          <h5>
-					    <?php echo esc_html( $discord_card_title ); ?>
-	          </h5>
-	          <p>
-					    <?php echo esc_html( $discord_card_text ); ?>
-	          </p>
-	          <div class="booster_dashboard_info_discord_btn">
-	            <a
-	              href="<?php echo esc_url( $discord_button_link ); ?>"
-	              class="dashboard_button w-100 button js_customer_dashboard_discord_link"
-	              target="_blank"
-	              rel="noopener noreferrer"
-	            >
-					      <?php echo esc_html( $discord_button_text ); ?>
-	            </a>
-	          </div>
-	        </div>
+        <div class="booster_dashboard_info_discord">
+          <h5>
+				    <?php echo __( 'Connect on Discord', 'gladiator-theme' ); ?>
+          </h5>
+          <p>
+				    <?php echo __( 'Join our Discord and contact the team anytime for order help and account support.', 'gladiator-theme' ); ?>
+          </p>
+          <div class="booster_dashboard_info_discord_btn">
+            <a
+              href="https://discord.gg/ZVa5Npz3kR"
+              class="dashboard_button w-100 button js_customer_dashboard_discord_link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+				      <?php echo __( 'Contact our 24/7 Discord', 'gladiator-theme' ); ?>
+            </a>
+          </div>
+        </div>
       </div>
 
     </div>
 
-	    <div class="customer_dashboard_discord_popup_overlay" id="customer_dashboard_discord_popup_overlay" aria-hidden="true">
-	      <div class="customer_dashboard_discord_popup" role="dialog" aria-modal="true" aria-labelledby="customer_dashboard_discord_popup_title">
-	        <button type="button" class="customer_dashboard_discord_popup_close" id="customer_dashboard_discord_popup_close" aria-label="<?php echo esc_attr__( 'Close popup', 'gladiator-theme' ); ?>">X</button>
-	        <h3 id="customer_dashboard_discord_popup_title"><?php echo esc_html( $discord_popup_title ); ?></h3>
-	        <p><?php echo esc_html( $discord_popup_intro ); ?></p>
-	        <ol class="customer_dashboard_discord_popup_steps">
-	          <?php foreach ( $discord_popup_steps as $discord_popup_step ) { ?>
-	          <li><?php echo esc_html( $discord_popup_step ); ?></li>
-	          <?php } ?>
-	        </ol>
-	        <p class="customer_dashboard_discord_popup_note"><?php echo esc_html( $discord_popup_note ); ?></p>
-	      </div>
-	    </div>
+    <div class="customer_dashboard_discord_popup_overlay" id="customer_dashboard_discord_popup_overlay" aria-hidden="true">
+      <div class="customer_dashboard_discord_popup" role="dialog" aria-modal="true" aria-labelledby="customer_dashboard_discord_popup_title">
+        <button type="button" class="customer_dashboard_discord_popup_close" id="customer_dashboard_discord_popup_close" aria-label="<?php echo esc_attr__( 'Close popup', 'gladiator-theme' ); ?>">X</button>
+        <h3 id="customer_dashboard_discord_popup_title"><?php echo __( 'Next steps on Discord', 'gladiator-theme' ); ?></h3>
+        <p><?php echo __( 'After joining our Discord server, please follow these steps:', 'gladiator-theme' ); ?></p>
+        <ol class="customer_dashboard_discord_popup_steps">
+          <li><?php echo __( 'Open the welcome or support channel and read the server instructions.', 'gladiator-theme' ); ?></li>
+          <li><?php echo __( 'Create a ticket or message the support team with your order details.', 'gladiator-theme' ); ?></li>
+          <li><?php echo __( 'Share your order number and a short description so we can help you faster.', 'gladiator-theme' ); ?></li>
+        </ol>
+        <p class="customer_dashboard_discord_popup_note"><?php echo __( 'Our team is available there 24/7.', 'gladiator-theme' ); ?></p>
+      </div>
+    </div>
   </div>
 </div>
 
